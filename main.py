@@ -12,6 +12,7 @@ hideboard = ReplyKeyboardRemove()
 user_steps = dict() # {cid, step,...}
 test = dict() # {test_group_id : ... , parameter : ..., type : ... , price : ... , unit : ..., minimum_range : ... , maximum_range : ... , analyze_date : ..., description : ...}
 member_user_cid = list() #[cid, ...]
+breed = dict() # {species_id : ..., name : ..., specifications : ...}
 
 
 def get_member_user():
@@ -55,31 +56,52 @@ def callback_handler(call):
             bot.send_message(cid, text_admin['template_test'], reply_markup=markup)
             bot.send_message(cid, text_admin['template_input_test'])
             user_steps[cid] = 2
+        elif data.startswith('species'):
+            species_id = int(data.split('_')[-1])
+            breed.setdefault('species_id', species_id)
+            bot.answer_callback_query(call_id, '✅')
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+            markup = send_home()
+            bot.send_message(cid, text_admin['name_breed_input'], reply_markup=markup)
+            user_steps[cid] = 4
+        elif data == 'no_specifications_breed':
+            insert_breed_data(species_id=breed['species_id'], name=breed['name'], specifications=None)
+            markup = send_home()
+            bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']), reply_markup=markup)
+            user_steps[cid] = 0
+        elif data == 'yes_specifications_breed':
+            bot.send_message(cid, text_admin['specifications_breed_input'])
+            user_steps[cid] = 4.1
+
+
     else:
         if data.startswith('first_name'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['first_name_edit'])
-            user_steps[cid] = 10
+            user_steps[cid] = 1.1
         elif data.startswith('last_name'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['last_name_edit'])
-            user_steps[cid] = 11
+            user_steps[cid] = 1.2
         elif data.startswith('username'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['username_edit'])
-            user_steps[cid] = 12
+            user_steps[cid] = 1.3
         elif data.startswith('national_code'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['national_code_edit'])
-            user_steps[cid] = 13
+            user_steps[cid] = 1.4
         elif data.startswith('phone'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['phone_edit'])
-            user_steps[cid] = 14
+            user_steps[cid] = 1.5
         elif data.startswith('address'):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['address_edit'])
-            user_steps[cid] = 15
+            user_steps[cid] = 1.6
 
 
 @bot.message_handler(commands=['start'])
@@ -113,7 +135,7 @@ def home_command(message):
     if cid in admins:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'])
-        markup.add(buttons_admin['create_species'])
+        markup.add(buttons_admin['create_breed'], buttons_admin['create_species'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
     else:
@@ -171,8 +193,8 @@ def create_test_handler(message):
             bot.send_message(cid, text_admin['test_group_not'] ,reply_markup=markup)
         else :
             markup = InlineKeyboardMarkup()
-            for group in test_group:
-                markup.add(InlineKeyboardButton(group['name'], callback_data=f"test_group_{group['id']}"))
+            for item in test_group:
+                markup.add(InlineKeyboardButton(item['name'], callback_data=f"test_group_{item['id']}"))
             bot.send_message(cid, text_admin['chooce_test_group'], reply_markup=markup)
     else :
         unknown_message(message)
@@ -184,6 +206,24 @@ def create_species_handler(message):
         markup = send_home()
         bot.send_message(cid, text_admin['name_species_input'], reply_markup=markup)
         user_steps[cid] = 3
+
+
+@bot.message_handler(func=lambda message:message.text==buttons_admin['create_breed'])
+def create_breed_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        species = show_species()
+        if not species:
+            markup = send_home()
+            bot.send_message(cid, text_admin['species_not'], reply_markup=markup)
+        else :
+            markup = InlineKeyboardMarkup()
+            for item in species:
+                markup.add(InlineKeyboardButton(item['name'], callback_data=f"species_{item['id']}"))
+            bot.send_message(cid, text_admin['chooce_species'], reply_markup=markup)
+    else:
+        unknown_message(message)
+
 
 
 @bot.message_handler(func=lambda message : get_user_step(message.chat.id)==1)
@@ -206,6 +246,123 @@ def group_test_handler(message):
             home_command(message)
     else:
         bot.send_message(cid, text_user['user_data_edit'])
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.1)
+def first_name_edit_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        first_name = message.text
+        if len(first_name) > 64:
+            bot.send_message(cid, text_user['first_name_check'])
+        else:
+            edit_user_first_name(first_name=first_name, cid=cid)
+            bot.send_message(cid, text_user['first_name_success'], reply_markup=markup)
+            account_handler(message)
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.2)
+def last_name_edit_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        last_name = message.text
+        if len(last_name) > 64:
+            bot.send_message(cid, text_user['last_name_check'])
+        else:
+            edit_user_last_name(last_name=last_name, cid=cid)
+            bot.send_message(cid, text_user['last_name_success'], reply_markup=markup)
+            account_handler(message)
+    else:
+        unknown_message(message)
+
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.3)
+def username_edit_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        username = message.text
+        exist_user = show_user_username()
+        exist_user_username = list()
+        for item in exist_user:
+            exist_user_username.append(item['username'])
+        english_flag = True
+        for char in username:
+            char_value = ord(char)
+            if (char_value >= 33 and char_value <= 126):
+                continue
+            else:
+                english_flag = False
+                break
+        if english_flag == True:
+            if username in exist_user_username:
+                bot.send_message(cid, text_user['username_unique'])
+            elif len(username) > 32:
+                bot.send_message(cid, text.user['username_check'])
+            else:
+                edit_user_username(username=username, cid=cid)
+                bot.send_message(cid, text_user['username_success'], reply_markup=markup)
+                account_handler(message)
+        else:
+            bot.send_message(cid, text_user['username_english'])
+    else:
+        unknown_message(message)
+  
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.4)
+def national_code_edit(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        national_code = message.text
+        if len(national_code) != 10:
+            bot.send_message(cid, text_user['national_code_check'])
+        elif national_code.isnumeric() == False:
+            bot.send_message(cid, text_user['national_code_check'])
+        else:
+            edit_user_national_code(national_code=national_code, cid=cid)
+            bot.send_message(cid, text_user['national_code_success'], reply_markup=markup)
+            account_handler(message)
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.5)
+def phone_edit(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        phone = message.text
+        if is_valid(phone):
+            edit_phone(phone=phone, cid=cid)
+            bot.send_message(cid, text_user['phone_success'])
+            account_handler(message)
+        else :
+            bot.send_message(cid, text_user['phone_check'], reply_markup=markup)
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.6)
+def address_edit(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        address = message.text
+        if len(address) > 255:
+            bot.send_message(cid, text_user['address_check'])
+        else:
+            edit_address(address=address, cid=cid)
+            bot.send_message(cid, text_user['address_success'], reply_markup=markup)
+            account_handler(message)
+    else:
+        unknown_message(message)
 
 
 
@@ -355,109 +512,43 @@ def species_handler(message):
     else:
         unknown_message(message)
 
-    
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==10)
-def first_name_edit_handler(message):
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==4)
+def breed_handler(message):
     cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        first_name = message.text
-        if len(first_name) > 64:
-            bot.send_message(cid, text_user['first_name_check'])
+    if cid in admins:
+        name = message.text
+        exist_breed = show_breed()
+        exist_breed_name = list()
+        for item in exist_breed:
+            exist_breed_name.append(item['name'])
+        if name in exist_breed_name:
+            bot.send_message(cid, text_admin['name_breed_unique'])
+        elif len(name) > 45:
+            bot.send_message(cid,text_admin['name_breed_check'])
         else:
-            edit_user_first_name(first_name=first_name, cid=cid)
-            bot.send_message(cid, text_user['first_name_success'], reply_markup=markup)
-            account_handler(message)
+            breed.setdefault('name', name)
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton(text_admin['no'], callback_data='no_specifications_breed'), InlineKeyboardButton(text_admin['yes'], callback_data='yes_specifications_breed'))
+            bot.send_message(cid, text_admin['specifications_breed'], reply_markup=markup)
+    else:
+        unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==11)
-def last_name_edit_handler(message):
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==4.1)
+def breed_specifications_handler(message):
     cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        last_name = message.text
-        if len(last_name) > 64:
-            bot.send_message(cid, text_user['last_name_check'])
+    if cid in admins:
+        specifications = message.text
+        if len(specifications) > 255:
+            bot.send_message(cid, text_admin['specifications_breed_check'])
         else:
-            edit_user_last_name(last_name=last_name, cid=cid)
-            bot.send_message(cid, text_user['last_name_success'], reply_markup=markup)
-            account_handler(message)
-
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==12)
-def username_edit_handler(message):
-    cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        username = message.text
-        exist_user = show_user_username()
-        exist_user_username = list()
-        for item in exist_user:
-            exist_user_username.append(item['username'])
-        english_flag = True
-        for char in username:
-            char_value = ord(char)
-            if (char_value >= 33 and char_value <= 126):
-                continue
-            else:
-                english_flag = False
-                break
-        if english_flag == True:
-            if username in exist_user_username:
-                bot.send_message(cid, text_user['username_unique'])
-            elif len(username) > 32:
-                bot.send_message(cid, text.user['username_check'])
-            else:
-                edit_user_username(username=username, cid=cid)
-                bot.send_message(cid, text_user['username_success'], reply_markup=markup)
-                account_handler(message)
-        else:
-            bot.send_message(cid, text_user['username_english'])
-
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==13)
-def national_code_edit(message):
-    cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        national_code = message.text
-        if len(national_code) != 10:
-            bot.send_message(cid, text_user['national_code_check'])
-        elif national_code.isnumeric() == False:
-            bot.send_message(cid, text_user['national_code_check'])
-        else:
-            edit_user_national_code(national_code=national_code, cid=cid)
-            bot.send_message(cid, text_user['national_code_success'], reply_markup=markup)
-            account_handler(message)
-
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==14)
-def phone_edit(message):
-    cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        phone = message.text
-        if is_valid(phone):
-            edit_phone(phone=phone, cid=cid)
-            bot.send_message(cid, text_user['phone_success'])
-            account_handler(message)
-        else :
-            bot.send_message(cid, text_user['phone_check'], reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==15)
-def address_edit(message):
-    cid = message.chat.id
-    if cid not in admins:
-        markup = send_home()
-        address = message.text
-        if len(address) > 255:
-            bot.send_message(cid, text_user['address_check'])
-        else:
-            edit_address(address=address, cid=cid)
-            bot.send_message(cid, text_user['address_success'], reply_markup=markup)
-            account_handler(message)
+            insert_breed_data(species_id=breed['species_id'], name=breed['name'], specifications=specifications)
+            bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']))
+            user_steps[cid] = 0
+            breed.clear()
+            home_command(message)
+    else:
+        unknown_message(message)
 
 
 @bot.message_handler(func=lambda message: True)

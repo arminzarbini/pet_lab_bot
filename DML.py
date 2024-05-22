@@ -116,7 +116,16 @@ def insert_species_data(name):
     conn.commit()
     conn.close()
 
-
+def insert_breed_data(species_id, name, specifications=None):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = """
+    INSERT INTO breed (species_id, name, specifications) VALUES (%s, %s, %s);
+    """
+    cursor.execute(SQL_Quary, (species_id, name, specifications))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 
 
@@ -136,16 +145,7 @@ def inesrt_payment_data(user_id, ammount):
 
 
 
-def insert_breed_data(species_id, name, specifications=None):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO breed (species_id, name, specifications) VALUES (%s, %s, %s);
-    """
-    cursor.execute(SQL_Quary, (species_id, name, specifications))
-    cursor.close()
-    conn.commit()
-    conn.close()
+
 
 
 def insert_vet_data(user_id, breed_id, name, gender=None, age=None, weight=None, personality=None):

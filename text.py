@@ -31,6 +31,18 @@ text_admin = {
     'name_species_unique'           : 'نام گونه حیوان تکراری است',
     'name_species_check'            : 'برای نام گونه حیوان بیشتر از 45 کاراکتر مجاز نیست',
     'success_create_species'        : 'گونه حیوان {} با موفقیت ایجاد شد',
+    'chooce_species'                : 'گونه حیوان را انتخاب کنید',
+    'species_not'                   : 'ابتدا گونه حیوان را تعریف کنید',
+    'name_breed_input'              : 'نام نژاد حیوان را وارد کنید',
+    'name_breed_unique'             : 'نام نژاد حیوان تکراری است',
+    'name_breed_check'              : 'برای نام نژاد حیوان بیشتر از 45 کاراکتر مجاز نیست',
+    'specifications_breed'          : 'آیا میخواهید برای این نژاد مشخصات تعریف کنید',
+    'yes'                           : 'بله',
+    'no'                            : 'خیر',
+    'success_create_breed'          : 'نژاد حیوان {} با موفقیت ایجاد شد',
+    'specifications_breed_input'    : 'مشخصات نژاد حیوان را وارد کنید',
+    'specifications_breed_check'    : 'برای مشخصات نژاد بیشتر از 255 کاراکتر مجاز نیست',
+
 
 }
 text_user = {
@@ -73,7 +85,9 @@ buttons = {
 buttons_admin = {
     'create_test_group'             : 'تعریف گروه آزمون',
     'create_test'                   : 'تعریف آزمایش',
-    'create_species'                : 'تعریف گونه حیوان'
+    'create_species'                : 'تعریف گونه حیوان',
+    'create_breed'                  : 'تعریف نژاد حیوان',
+
 }
 buttons_user = {
     'account'                       : 'حساب کاربری',

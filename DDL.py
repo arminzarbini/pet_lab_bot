@@ -56,6 +56,7 @@ def create_breed_table():
     specifications TINYTEXT,
     PRIMARY KEY (id),
     FOREIGN KEY (species_id) REFERENCES species(id)
+    UNIQUE (name)
     );
     """
     cursor.execute(SQL_Quary)

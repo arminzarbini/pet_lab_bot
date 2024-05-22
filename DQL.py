@@ -71,7 +71,7 @@ def show_species():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT name FROM species;
+    SELECT * FROM species;
 """
     cursor.execute(SQL_Quary)
     result = cursor.fetchall()
@@ -79,3 +79,14 @@ def show_species():
     conn.close()
     return result
 
+def show_breed():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT * FROM breed;
+"""
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
