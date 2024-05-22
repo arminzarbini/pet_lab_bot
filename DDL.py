@@ -38,6 +38,7 @@ def create_species_table():
     id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
     name VARCHAR(45) NOT NULL,
     PRIMARY KEY (id)
+    UNIQUE (name)
     );
     """
     cursor.execute(SQL_Quary)

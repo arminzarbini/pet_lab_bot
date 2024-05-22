@@ -4,9 +4,9 @@ text = {
     'home'                          : 'یکی از موارد زیر را انتخاب نمایید',
 }
 text_admin = {
-    'test_group_input'              : 'نام گروه آزمایش را وارد کنید',
-    'test_group_unique'             : 'نام گروم آزمایش تکراری است',
-    'name_test_group_check'         : 'بیشتر از 45 کاراکتر مجاز نیست',
+    'name_test_group_input'         : 'نام گروه آزمایش را وارد کنید',
+    'name_test_group_unique'        : 'نام گروم آزمایش تکراری است',
+    'name_test_group_check'         : 'برای نام گروه آزمایش بیشتر از 45 کاراکتر مجاز نیست',
     'success_create_test_group'     : 'گروه آزمایش {} با موفقیت ایجاد شد',
     'chooce_test_group'             : 'کروه آزمایش را انتخاب کنید',
     'test_group_not'                : 'ابتدا گروه آزمایش را تعریف کنید',
@@ -27,6 +27,11 @@ text_admin = {
     'test_item_check'               : 'آیتم غیرمجاز وارد شده است',
     'send_full_test_item'           : 'ارسال تمام آیتم ها اجباری است',
     'success_create_test'           : 'آزمایش {} با موفقیت ایجاد شد',
+    'name_species_input'            : 'نام گونه حیوان را وارد کنید',
+    'name_species_unique'           : 'نام گونه حیوان تکراری است',
+    'name_species_check'            : 'برای نام گونه حیوان بیشتر از 45 کاراکتر مجاز نیست',
+    'success_create_species'        : 'گونه حیوان {} با موفقیت ایجاد شد',
+
 }
 text_user = {
     'compelete_edit_account'        : 'اطلاعات حساب',
@@ -51,17 +56,24 @@ text_user = {
     'username_success'              : 'نام کاربری جدید با موفقیت ثبت شد',
     'national_code_edit'            : 'کد ملی جدید را وارد کنید',
     'national_code_check'           : 'برای کد ملی 10 رقم مجاز است',
-    'national_code_success'         : 'کد ملی جدید با موفقیت ایجاد شد',
-
-
-
-
-
+    'national_code_success'         : 'کد ملی جدید با موفقیت ثبت شد',
+    'phone_edit'                    : 'شماره موبایل جدید را وارد کنید',
+    'phone_check'                   : 'برای شماره موبایل الگوهای زیر مجاز است\n09352993173\n00989352993173\n+989352993173',
+    'phone_success'                 : 'شماره موبایل جدید با موفقیت ثبت شد ',
+    'address_edit'                  : 'آدرس جدید را وارد کنید',
+    'address_check'                 : 'برای آدرس بیشتر از 255 کاراکتر مجاز نیست',
+    'address_success'               : 'آدرس جدید با موفقیت ثبت شد'
 }
+
+buttons = {
+    'home'                          : 'منوی اصلی',
+}
+
+
 buttons_admin = {
     'create_test_group'             : 'تعریف گروه آزمون',
     'create_test'                   : 'تعریف آزمایش',
-    'home'                          : 'منوی اصلی',
+    'create_species'                : 'تعریف گونه حیوان'
 }
 buttons_user = {
     'account'                       : 'حساب کاربری',

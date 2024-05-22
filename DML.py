@@ -83,8 +83,38 @@ def edit_user_national_code(national_code, cid):
     conn.commit()
     conn.close()
 
+def edit_phone(phone, cid):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = """
+    UPDATE user SET phone=%s WHERE cid=%s
+"""
+    cursor.execute(SQL_Quary, (phone,cid))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
-
+def edit_address(address, cid):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = """
+    UPDATE user SET address=%s WHERE cid=%s
+"""
+    cursor.execute(SQL_Quary, (address, cid))
+    cursor.close()
+    conn.commit()
+    conn.close()
+    
+def insert_species_data(name):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = """
+    INSERT INTO species (name) VALUES (%s);
+    """
+    cursor.execute(SQL_Quary, (name, ))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 
 
@@ -103,16 +133,7 @@ def inesrt_payment_data(user_id, ammount):
     conn.close()
 
 
-def insert_species_data(name):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO species (name) VALUES (%s);
-    """
-    cursor.execute(SQL_Quary, (name, ))
-    cursor.close()
-    conn.commit()
-    conn.close()
+
 
 
 def insert_breed_data(species_id, name, specifications=None):

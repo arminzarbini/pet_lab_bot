@@ -66,3 +66,16 @@ def show_user_username():
     cursor.close()
     conn.close()
     return result
+
+def show_species():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT name FROM species;
+"""
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
