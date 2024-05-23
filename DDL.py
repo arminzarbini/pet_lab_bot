@@ -30,32 +30,16 @@ def create_user_table():
     cursor.close()
     conn.close()
 
-def create_species_table():
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    CREATE TABLE IF NOT EXISTS species (
-    id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name VARCHAR(45) NOT NULL,
-    PRIMARY KEY (id)
-    UNIQUE (name)
-    );
-    """
-    cursor.execute(SQL_Quary)
-    cursor.close()
-    conn.close()
-
 def create_breed_table():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     SQL_Quary = """
     CREATE TABLE IF NOT EXISTS breed (
     id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT, 
-    species_id SMALLINT UNSIGNED NOT NULL,
+    species ENUM('cat', 'dog', 'bird', 'rabbit', 'rat', 'other') NOT NULL,
     name VARCHAR(45) NOT NULL,
     specifications TINYTEXT,
     PRIMARY KEY (id),
-    FOREIGN KEY (species_id) REFERENCES species(id)
     UNIQUE (name)
     );
     """
@@ -206,7 +190,6 @@ def create_table():
 if __name__ == "__main__":
     create_database()
     create_user_table()
-    create_species_table()
     create_breed_table()
     create_pet_table()
     create_test_group_table()

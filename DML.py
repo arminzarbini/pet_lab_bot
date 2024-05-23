@@ -104,29 +104,18 @@ def edit_address(address, cid):
     cursor.close()
     conn.commit()
     conn.close()
-    
-def insert_species_data(name):
+
+
+def insert_breed_data(species, name, specifications=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     SQL_Quary = """
-    INSERT INTO species (name) VALUES (%s);
+    INSERT INTO breed (species, name, specifications) VALUES (%s, %s, %s);
     """
-    cursor.execute(SQL_Quary, (name, ))
+    cursor.execute(SQL_Quary, (species, name, specifications))
     cursor.close()
     conn.commit()
     conn.close()
-
-def insert_breed_data(species_id, name, specifications=None):
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO breed (species_id, name, specifications) VALUES (%s, %s, %s);
-    """
-    cursor.execute(SQL_Quary, (species_id, name, specifications))
-    cursor.close()
-    conn.commit()
-    conn.close()
-
 
 
 

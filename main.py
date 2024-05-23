@@ -12,7 +12,7 @@ hideboard = ReplyKeyboardRemove()
 user_steps = dict() # {cid, step,...}
 test = dict() # {test_group_id : ... , parameter : ..., type : ... , price : ... , unit : ..., minimum_range : ... , maximum_range : ... , analyze_date : ..., description : ...}
 member_user_cid = list() #[cid, ...]
-breed = dict() # {species_id : ..., name : ..., specifications : ...}
+breed = dict() # {species : ..., name : ..., specifications : ...}
 
 
 def get_member_user():
@@ -56,25 +56,25 @@ def callback_handler(call):
             bot.send_message(cid, text_admin['template_test'], reply_markup=markup)
             bot.send_message(cid, text_admin['template_input_test'])
             user_steps[cid] = 2
-        elif data.startswith('species'):
-            species_id = int(data.split('_')[-1])
-            breed.setdefault('species_id', species_id)
+        elif data in species:
+            breed.setdefault('species', data)
             bot.answer_callback_query(call_id, '✅')
             try:
                 bot.delete_message(cid, mid)
             except:
                 pass
             markup = send_home()
+            
             bot.send_message(cid, text_admin['name_breed_input'], reply_markup=markup)
-            user_steps[cid] = 4
+            user_steps[cid] = 3
         elif data == 'no_specifications_breed':
-            insert_breed_data(species_id=breed['species_id'], name=breed['name'], specifications=None)
+            insert_breed_data(species=breed['species'], name=breed['name'], specifications=None)
             markup = send_home()
             bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']), reply_markup=markup)
             user_steps[cid] = 0
         elif data == 'yes_specifications_breed':
             bot.send_message(cid, text_admin['specifications_breed_input'])
-            user_steps[cid] = 4.1
+            user_steps[cid] = 3.1
 
 
     else:
@@ -135,7 +135,7 @@ def home_command(message):
     if cid in admins:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'])
-        markup.add(buttons_admin['create_breed'], buttons_admin['create_species'])
+        markup.add(buttons_admin['create_breed'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
     else:
@@ -199,28 +199,15 @@ def create_test_handler(message):
     else :
         unknown_message(message)
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['create_species'])
-def create_species_handler(message):
-    cid = message.chat.id
-    if cid in admins:
-        markup = send_home()
-        bot.send_message(cid, text_admin['name_species_input'], reply_markup=markup)
-        user_steps[cid] = 3
-
 
 @bot.message_handler(func=lambda message:message.text==buttons_admin['create_breed'])
 def create_breed_handler(message):
     cid = message.chat.id
     if cid in admins:
-        species = show_species()
-        if not species:
-            markup = send_home()
-            bot.send_message(cid, text_admin['species_not'], reply_markup=markup)
-        else :
-            markup = InlineKeyboardMarkup()
-            for item in species:
-                markup.add(InlineKeyboardButton(item['name'], callback_data=f"species_{item['id']}"))
-            bot.send_message(cid, text_admin['chooce_species'], reply_markup=markup)
+        markup = InlineKeyboardMarkup()
+        for item in species:
+            markup.add(InlineKeyboardButton(text_admin[item], callback_data=item))
+        bot.send_message(cid, text_admin['chooce_species'], reply_markup=markup)
     else:
         unknown_message(message)
 
@@ -294,7 +281,7 @@ def username_edit_handler(message):
         english_flag = True
         for char in username:
             char_value = ord(char)
-            if (char_value >= 33 and char_value <= 126):
+            if (char_value >= 48 and char_value <= 57) or (char_value >= 97 and char_value <= 122) or char_value==95: #username rules based on telegram (0-9 or a-z or _)
                 continue
             else:
                 english_flag = False
@@ -309,7 +296,7 @@ def username_edit_handler(message):
                 bot.send_message(cid, text_user['username_success'], reply_markup=markup)
                 account_handler(message)
         else:
-            bot.send_message(cid, text_user['username_english'])
+            bot.send_message(cid, text_user['username_rules'])
     else:
         unknown_message(message)
   
@@ -490,29 +477,8 @@ def test_handler(message):
     else:
         unknown_message(message)
 
+
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3)
-def species_handler(message):
-    cid = message.chat.id
-    if cid in admins:
-        name = message.text
-        exist_species = show_species()
-        exist_species_name = list() #list species name for unique check
-        for item in exist_species:
-            exist_species_name.append(item['name'])
-        if name in exist_species_name:
-            bot.send_message(cid, text_admin['name_species_unique'])
-        elif len(name) > 45:
-            bot.send_message(cid,text_admin['name_species_check'])
-        else:
-            insert_species_data(name=name)
-            bot.send_message(cid, text_admin['success_create_species'].format(name))
-            user_steps[cid] = 0
-            home_command(message)
-
-    else:
-        unknown_message(message)
-
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==4)
 def breed_handler(message):
     cid = message.chat.id
     if cid in admins:
@@ -534,7 +500,7 @@ def breed_handler(message):
         unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==4.1)
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3.1)
 def breed_specifications_handler(message):
     cid = message.chat.id
     if cid in admins:
@@ -542,7 +508,8 @@ def breed_specifications_handler(message):
         if len(specifications) > 255:
             bot.send_message(cid, text_admin['specifications_breed_check'])
         else:
-            insert_breed_data(species_id=breed['species_id'], name=breed['name'], specifications=specifications)
+            breed.setdefault('specifications', specifications)
+            insert_breed_data(species=breed['species'], name=breed['name'], specifications=breed['specifications'])
             bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']))
             user_steps[cid] = 0
             breed.clear()
