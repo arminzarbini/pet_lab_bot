@@ -7,18 +7,17 @@ from text import *
 import re
 
 
-bot = telebot.TeleBot(BOT_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN, num_threads=10)
 hideboard = ReplyKeyboardRemove()
+users = list() #[cid, ...]
 user_steps = dict() # {cid, step,...}
 test = dict() # {test_group_id : ... , parameter : ..., type : ... , price : ... , unit : ..., minimum_range : ... , maximum_range : ... , analyze_date : ..., description : ...}
-member_user_cid = list() #[cid, ...]
 breed = dict() # {species : ..., name : ..., specifications : ...}
 
 
 def get_member_user():
-    member_user = show_member_user_cid()
-    for user in member_user:
-        member_user_cid.append(user['cid'])
+    member_user = show_member_user()
+    return member_user
 
 
 def get_user_step(cid):
@@ -35,7 +34,6 @@ def is_valid(phone):
 	return Pattern.match(phone)
 
 
-get_member_user()
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
@@ -64,7 +62,6 @@ def callback_handler(call):
             except:
                 pass
             markup = send_home()
-            
             bot.send_message(cid, text_admin['name_breed_input'], reply_markup=markup)
             user_steps[cid] = 3
         elif data == 'no_specifications_breed':
@@ -75,8 +72,6 @@ def callback_handler(call):
         elif data == 'yes_specifications_breed':
             bot.send_message(cid, text_admin['specifications_breed_input'])
             user_steps[cid] = 3.1
-
-
     else:
         if data.startswith('first_name'):
             bot.answer_callback_query(call_id, '✅')
@@ -113,7 +108,7 @@ def start_command(message):
     else : 
         bot.send_message(cid, text['welcome'])
         home_command(message)
-        if cid not in member_user_cid:
+        if cid not in users:
             first_name = message.chat.first_name
             if message.chat.last_name == None:
                 last_name = None
@@ -124,7 +119,6 @@ def start_command(message):
             else:
                 username = message.chat.username
                 insert_user_data(cid=cid, first_name=first_name, last_name=last_name, username=username, national_code=None, phone=None, address=None)
-                member_user_cid.append(cid)
         else:
             pass
   
@@ -159,17 +153,15 @@ def account_handler(message):
     cid = message.chat.id
     if cid not in admins:
         markup = InlineKeyboardMarkup()
-        user_data = show_user_data(cid)
-        for user in user_data:
-            if user['cid'] == cid:
-                markup.add(InlineKeyboardButton(f"{text_user['first_name']} : {user['first_name']}", callback_data=f"first_name : {user['first_name']}"))
-                markup.add(InlineKeyboardButton(f"{text_user['last_name']} : {user['last_name']}", callback_data=f"last_name : {user['last_name']}"))
-                markup.add(InlineKeyboardButton(f"{text_user['username']} : {user['username']}", callback_data=f"username : {user['username']}"))
-                markup.add(InlineKeyboardButton(f"{text_user['national_code']} : {user['national_code']}", callback_data=f"national_code : {user['national_code']}"))
-                markup.add(InlineKeyboardButton(f"{text_user['phone']} : {user['phone']}", callback_data=f"phone : {user['phone']}"))
-                markup.add(InlineKeyboardButton(f"{text_user['address']} : {user['address']}", callback_data=f"address : {user['address']}"))
-                bot.send_message(cid, text_user['user_data'], reply_markup=markup)
-                bot.send_message(cid, text_user['user_data_edit'])
+        for item in show_user_data(cid):
+            markup.add(InlineKeyboardButton(f"{text_user['first_name']} : {item['first_name']}", callback_data=f"first_name : {item['first_name']}"))
+            markup.add(InlineKeyboardButton(f"{text_user['last_name']} : {item['last_name']}", callback_data=f"last_name : {item['last_name']}"))
+            markup.add(InlineKeyboardButton(f"{text_user['username']} : {item['username']}", callback_data=f"username : {item['username']}"))
+            markup.add(InlineKeyboardButton(f"{text_user['national_code']} : {item['national_code']}", callback_data=f"national_code : {item['national_code']}"))
+            markup.add(InlineKeyboardButton(f"{text_user['phone']} : {item['phone']}", callback_data=f"phone : {item['phone']}"))
+            markup.add(InlineKeyboardButton(f"{text_user['address']} : {item['address']}", callback_data=f"address : {item['address']}"))
+            bot.send_message(cid, text_user['user_data'], reply_markup=markup)
+            bot.send_message(cid, text_user['user_data_edit'])
     user_steps[cid] = 1
 
 @bot.message_handler(func=lambda message: message.text==buttons_admin['create_test_group'])
@@ -187,13 +179,12 @@ def create_test_group_handler(message):
 def create_test_handler(message):
     cid = message.chat.id
     if cid in admins:
-        test_group = show_test_group()
-        if not test_group:
+        if check_test_group_exists():
             markup = send_home()
             bot.send_message(cid, text_admin['test_group_not'] ,reply_markup=markup)
         else :
             markup = InlineKeyboardMarkup()
-            for item in test_group:
+            for item in show_test_group():
                 markup.add(InlineKeyboardButton(item['name'], callback_data=f"test_group_{item['id']}"))
             bot.send_message(cid, text_admin['chooce_test_group'], reply_markup=markup)
     else :
@@ -218,11 +209,7 @@ def group_test_handler(message):
     cid = message.chat.id
     if cid in admins:
         name = message.text
-        exist_test_group = show_test_group()
-        exist_test_group_name = list() #list test group name for unique check
-        for item in exist_test_group:
-            exist_test_group_name.append(item['name'])
-        if name in exist_test_group_name:
+        if check_test_group_name(name):
             bot.send_message(cid, text_admin['name_test_group_unique'])
         elif len(name) > 45:
             bot.send_message(cid, text_admin['name_test_group_check'])
@@ -274,20 +261,16 @@ def username_edit_handler(message):
     if cid not in admins:
         markup = send_home()
         username = message.text
-        exist_user = show_user_username()
-        exist_user_username = list()
-        for item in exist_user:
-            exist_user_username.append(item['username'])
-        english_flag = True
+        username_rules = True
         for char in username:
             char_value = ord(char)
             if (char_value >= 48 and char_value <= 57) or (char_value >= 97 and char_value <= 122) or char_value==95: #username rules based on telegram (0-9 or a-z or _)
                 continue
             else:
-                english_flag = False
+                username_rules = False
                 break
-        if english_flag == True:
-            if username in exist_user_username:
+        if username_rules == True:
+            if check_user_username():
                 bot.send_message(cid, text_user['username_unique'])
             elif len(username) > 32:
                 bot.send_message(cid, text.user['username_check'])
@@ -372,14 +355,10 @@ def test_handler(message):
             for key,value in item_check.items():  
                 if key == 'parameter':
                     parameter = value
-                    exist_test = show_test_parameter()
-                    exist_test_parameter = list()
-                    for item in exist_test:
-                            exist_test_parameter.append(item['parameter'])
                     if parameter == "":
                         bot.send_message(cid, text_admin['parameter_test_null'])
                     else :
-                        if parameter in exist_test_parameter:
+                        if check_test_parameter(parameter):
                             bot.send_message(cid, text_admin['parameter_test_unique'])
                         elif len(parameter) > 45:
                             bot.send_message(cid, text_admin['parameter_test_check'])
@@ -483,11 +462,7 @@ def breed_handler(message):
     cid = message.chat.id
     if cid in admins:
         name = message.text
-        exist_breed = show_breed()
-        exist_breed_name = list()
-        for item in exist_breed:
-            exist_breed_name.append(item['name'])
-        if name in exist_breed_name:
+        if check_breed_name():
             bot.send_message(cid, text_admin['name_breed_unique'])
         elif len(name) > 45:
             bot.send_message(cid,text_admin['name_breed_check'])
@@ -523,5 +498,5 @@ def unknown_message(message):
     cid = message.chat.id
     bot.send_message(cid, text['unknown_message'])
 
-
+users = get_member_user()
 bot.infinity_polling()

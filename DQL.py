@@ -2,80 +2,82 @@ import mysql.connector
 from config import *
 
 
+def check_test_group_name(name):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT name FROM test_group WHERE name=%s;"
+    cursor.execute(SQL_Quary, (name, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return len(result)!=0
+
+def check_test_group_exists():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT COUNT(*) FROM test_group;"
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]['COUNT(*)'] == 0
 
 def show_test_group():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT * FROM test_group;
-    """
+    SQL_Quary = "SELECT * from test_group;"
     cursor.execute(SQL_Quary)
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return result
 
-
-
-def show_test_parameter():
+def check_test_parameter(parameter):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT parameter FROM test;
-"""
-    cursor.execute(SQL_Quary)
+    SQL_Quary = "SELECT parameter FROM test WHERE parameter=%s;"
+    cursor.execute(SQL_Quary, (parameter, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
+    return len(result)!=0
 
-
-def show_member_user_cid():
+def show_member_user():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT cid FROM user;
-"""
+    SQL_Quary = "SELECT cid FROM user;"
     cursor.execute(SQL_Quary)
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
-
+    return [i['cid'] for i in result]
 
 def show_user_data(cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT * FROM user WHERE cid=%s;
-"""
+    SQL_Quary = "SELECT * FROM user WHERE cid=%s;"
     cursor.execute(SQL_Quary, (cid, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return result
 
-def show_user_username():
+def check_user_username(username):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT username FROM user;
-"""
-    cursor.execute(SQL_Quary)
+    SQL_Quary = "SELECT username FROM user WHERE username=%s;"
+    cursor.execute(SQL_Quary, (username, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
+    return len(result)!=0
 
-
-def show_breed():
+def check_breed_name(name):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = """
-    SELECT * FROM breed;
-"""
-    cursor.execute(SQL_Quary)
+    SQL_Quary = "SELECT name FROM breed WHERE name=%s;"
+    cursor.execute(SQL_Quary, (name, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
+    return len(result)!=0

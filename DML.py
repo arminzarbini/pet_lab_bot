@@ -5,33 +5,25 @@ from config import *
 def insert_test_group_data(name):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO test_group (name) VALUES (%s);
-    """
+    SQL_Quary = "INSERT INTO test_group (name) VALUES (%s);"
     cursor.execute(SQL_Quary, (name, ))
     cursor.close()
     conn.commit()
     conn.close()
 
-
 def insert_test_data(test_group_id, parameter, type, price, unit=None, minimum_range=None, maximum_range=None, analyze_date=None, description=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO test (test_group_id, parameter, type, price, unit, minimum_range, maximum_range, analyze_date, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """
+    SQL_Quary = "INSERT INTO test (test_group_id, parameter, type, price, unit, minimum_range, maximum_range, analyze_date, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
     cursor.execute(SQL_Quary, (test_group_id, parameter, type, price, unit, minimum_range, maximum_range, analyze_date, description))
     cursor.close()
     conn.commit()
     conn.close()
 
-
 def insert_user_data(cid, first_name, last_name=None, username=None, national_code=None, phone=None, address=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO user (cid, first_name, last_name, username, national_code, phone, address) VALUES (%s, %s, %s, %s, %s, %s, %s);
-    """
+    SQL_Quary = "INSERT INTO user (cid, first_name, last_name, username, national_code, phone, address) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     cursor.execute(SQL_Quary, (cid, first_name, last_name, username, national_code, phone, address))
     cursor.close()
     conn.commit()
@@ -40,33 +32,25 @@ def insert_user_data(cid, first_name, last_name=None, username=None, national_co
 def edit_user_first_name(first_name, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET first_name=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET first_name=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (first_name, cid))
     cursor.close()
     conn.commit()
     conn.close()
 
-
 def edit_user_last_name(last_name, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET last_name=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET last_name=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (last_name, cid))
     cursor.close()
     conn.commit()
     conn.close()
 
-
 def edit_user_username(username, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET username=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET username=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (username, cid))
     cursor.close()
     conn.commit()
@@ -75,9 +59,7 @@ def edit_user_username(username, cid):
 def edit_user_national_code(national_code, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET national_code=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET national_code=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (national_code, cid))
     cursor.close()
     conn.commit()
@@ -86,9 +68,7 @@ def edit_user_national_code(national_code, cid):
 def edit_phone(phone, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET phone=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET phone=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (phone,cid))
     cursor.close()
     conn.commit()
@@ -97,21 +77,16 @@ def edit_phone(phone, cid):
 def edit_address(address, cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    UPDATE user SET address=%s WHERE cid=%s
-"""
+    SQL_Quary = "UPDATE user SET address=%s WHERE cid=%s;"
     cursor.execute(SQL_Quary, (address, cid))
     cursor.close()
     conn.commit()
     conn.close()
 
-
 def insert_breed_data(species, name, specifications=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO breed (species, name, specifications) VALUES (%s, %s, %s);
-    """
+    SQL_Quary = "INSERT INTO breed (species, name, specifications) VALUES (%s, %s, %s);"
     cursor.execute(SQL_Quary, (species, name, specifications))
     cursor.close()
     conn.commit()
@@ -119,22 +94,19 @@ def insert_breed_data(species, name, specifications=None):
 
 
 
+
+
+
+
+
 def inesrt_payment_data(user_id, ammount):
     conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO payment (user_id, ammount) VALUES (%s, %s);
-    """
+    SQL_Quary = "INSERT INTO payment (user_id, ammount) VALUES (%s, %s);"
     cursor.execute(SQL_Quary, (user_id, ammount))
     cursor.close()
     conn.commit()
     conn.close()
-
-
-
-
-
-
 
 
 def insert_vet_data(user_id, breed_id, name, gender=None, age=None, weight=None, personality=None):
@@ -147,8 +119,6 @@ def insert_vet_data(user_id, breed_id, name, gender=None, age=None, weight=None,
     cursor.close()
     conn.commit()
     conn.close()
-
-
 
 
 
