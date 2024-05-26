@@ -81,3 +81,14 @@ def check_breed_name(name):
     cursor.close()
     conn.close()
     return len(result)!=0
+
+def show_breed_name(species):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, name FROM breed WHERE species=%s"
+    cursor.execute(SQL_Quary, (species, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return {i['id']:i['name'] for i in result}
+    

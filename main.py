@@ -13,6 +13,7 @@ users = list() #[cid, ...]
 user_steps = dict() # {cid, step,...}
 test = dict() # {test_group_id : ... , parameter : ..., type : ... , price : ... , unit : ..., minimum_range : ... , maximum_range : ... , analyze_date : ..., description : ...}
 breed = dict() # {species : ..., name : ..., specifications : ...}
+user_pets = dict() #{breed_id : ..., name : ...}
 
 
 def get_member_user():
@@ -44,7 +45,7 @@ def callback_handler(call):
     if cid in admins:
         if data.startswith('test_group'):
             test_group_id = int(data.split('_')[-1])
-            test.setdefault('test_group_id', test_group_id)
+            test.update({'test_group_id': test_group_id})
             bot.answer_callback_query(call_id, '✅')
             try:
                 bot.delete_message(cid, mid)
@@ -55,7 +56,7 @@ def callback_handler(call):
             bot.send_message(cid, text_admin['template_input_test'])
             user_steps[cid] = 2
         elif data in species:
-            breed.setdefault('species', data)
+            breed.update({'species': data})
             bot.answer_callback_query(call_id, '✅')
             try:
                 bot.delete_message(cid, mid)
@@ -68,6 +69,7 @@ def callback_handler(call):
             insert_breed_data(species=breed['species'], name=breed['name'], specifications=None)
             markup = send_home()
             bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']), reply_markup=markup)
+            breed.clear()
             user_steps[cid] = 0
         elif data == 'yes_specifications_breed':
             bot.send_message(cid, text_admin['specifications_breed_input'])
@@ -97,6 +99,23 @@ def callback_handler(call):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['address_edit'])
             user_steps[cid] = 1.6
+        elif data in species:
+            chosen_breed = show_breed_name(data)
+            markup = InlineKeyboardMarkup()
+            for key,value in chosen_breed.items():
+                markup.add(InlineKeyboardButton(value, callback_data=f"chosen_breed_id_{key}"))
+            bot.edit_message_text(text_user['choose_breed'], cid, mid, call_id)
+            bot.edit_message_reply_markup(cid, mid, call_id, reply_markup=markup)
+        elif data.startswith('chosen_breed_id'):
+            breed_id = int(data.split('_')[-1])
+            user_pets.update({'breed_id': breed_id})
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+            bot.send_message(cid, text_user['pet_name'])
+            user_steps[cid] = 2
+            
 
 
 @bot.message_handler(commands=['start'])
@@ -134,7 +153,7 @@ def home_command(message):
         user_steps[cid] = 0
     else:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(buttons_user['account'])
+        markup.add(buttons_user['account'], buttons_user['pets'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
 
@@ -197,11 +216,33 @@ def create_breed_handler(message):
     if cid in admins:
         markup = InlineKeyboardMarkup()
         for item in species:
-            markup.add(InlineKeyboardButton(text_admin[item], callback_data=item))
-        bot.send_message(cid, text_admin['chooce_species'], reply_markup=markup)
+            markup.add(InlineKeyboardButton(text[item], callback_data=item))
+        bot.send_message(cid, text['chooce_species'], reply_markup=markup)
     else:
         unknown_message(message)
 
+
+@bot.message_handler(func=lambda message:message.text==buttons_user['pets'])
+def pets_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(buttons_user['create_pet'])
+        bot.send_message(cid, text_user['pet_menu'], reply_markup=markup)
+    else:
+        unknown_message()
+
+
+@bot.message_handler(func=lambda message:message.text==buttons_user['create_pet'])
+def create_pet_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = InlineKeyboardMarkup()
+        for item in species:
+            markup.add(InlineKeyboardButton(text[item], callback_data=item))
+        bot.send_message(cid, text['chooce_species'], reply_markup=markup)
+    else:
+        unknown_message()
 
 
 @bot.message_handler(func=lambda message : get_user_step(message.chat.id)==1)
@@ -233,7 +274,6 @@ def first_name_edit_handler(message):
         else:
             edit_user_first_name(first_name=first_name, cid=cid)
             bot.send_message(cid, text_user['first_name_success'], reply_markup=markup)
-            account_handler(message)
     else:
         unknown_message(message)
 
@@ -249,7 +289,6 @@ def last_name_edit_handler(message):
         else:
             edit_user_last_name(last_name=last_name, cid=cid)
             bot.send_message(cid, text_user['last_name_success'], reply_markup=markup)
-            account_handler(message)
     else:
         unknown_message(message)
 
@@ -270,14 +309,13 @@ def username_edit_handler(message):
                 username_rules = False
                 break
         if username_rules == True:
-            if check_user_username():
+            if check_user_username(username):
                 bot.send_message(cid, text_user['username_unique'])
             elif len(username) > 32:
                 bot.send_message(cid, text.user['username_check'])
             else:
                 edit_user_username(username=username, cid=cid)
                 bot.send_message(cid, text_user['username_success'], reply_markup=markup)
-                account_handler(message)
         else:
             bot.send_message(cid, text_user['username_rules'])
     else:
@@ -298,7 +336,6 @@ def national_code_edit(message):
         else:
             edit_user_national_code(national_code=national_code, cid=cid)
             bot.send_message(cid, text_user['national_code_success'], reply_markup=markup)
-            account_handler(message)
     else:
         unknown_message(message)
 
@@ -312,7 +349,6 @@ def phone_edit(message):
         if is_valid(phone):
             edit_phone(phone=phone, cid=cid)
             bot.send_message(cid, text_user['phone_success'])
-            account_handler(message)
         else :
             bot.send_message(cid, text_user['phone_check'], reply_markup=markup)
     else:
@@ -330,7 +366,6 @@ def address_edit(message):
         else:
             edit_address(address=address, cid=cid)
             bot.send_message(cid, text_user['address_success'], reply_markup=markup)
-            account_handler(message)
     else:
         unknown_message(message)
 
@@ -363,14 +398,14 @@ def test_handler(message):
                         elif len(parameter) > 45:
                             bot.send_message(cid, text_admin['parameter_test_check'])
                         else :
-                            test.setdefault(key, parameter)
+                            test.update({key: parameter})
                 elif key == 'type':
                     type = value
                     if type == "":
                         bot.send_message(cid, text_admin['type_test_null'])
                     else:
                         if type == 'quality' or type == 'quantity':
-                            test.setdefault(key, type)
+                            test.update({key: type})
                         else : 
                             bot.send_message(cid, text_admin['type_test_check'])
                 elif key == 'price':
@@ -386,19 +421,19 @@ def test_handler(message):
                             if len(str(price).split('.')[1]) > 10 or len(str(price).split('.')[-1]) > 2 :
                                 bot.send_message(cid, text_admin['price_test_check'])
                             else:
-                                test.setdefault(key, price)
+                                test.update({key: price})
                 elif key == 'unit':
                     unit = value
                     if unit == "":
-                        test.setdefault(key, None)
+                        test.update({key: None})
                     elif len(unit) > 10:
                         bot.send_message(cid, text_admin['unit_test_check'])
                     else:
-                        test.setdefault(key, unit)
+                        test.update({key: unit})
                 elif key == 'minimum_range':
                     minimum_range = value
                     if minimum_range == "":
-                        test.setdefault(key, None)
+                        test.update({key: None})
                     else:
                         try:
                             minimum_range = float(minimum_range)
@@ -408,11 +443,11 @@ def test_handler(message):
                             if len(str(minimum_range).split('.')[1]) > 5 or len(str(minimum_range).split('.')[-1]) > 3 :
                                 bot.send_message(cid, text_admin['minimum_range_test_check'])
                             else:
-                                test.setdefault(key, minimum_range)
+                                test.update({key: minimum_range})
                 elif key == 'maximum_range':
                     maximum_range = value
                     if maximum_range == "":
-                        test.setdefault(key, None)
+                        test.update({key: None})
                     else:
                         try:
                             maximum_range = float(maximum_range)
@@ -422,11 +457,11 @@ def test_handler(message):
                             if len(str(maximum_range).split('.')[1]) > 5 or len(str(maximum_range).split('.')[-1]) > 3 :
                                 bot.send_message(cid, text_admin['maximum_range_test_check'])
                             else:
-                                test.setdefault(key, maximum_range)
+                                test.update({key: maximum_range})
                 elif key == 'analyze_date':
                     analyze_date = value
                     if analyze_date == "":
-                        test.setdefault(key, None)
+                        test.update({key: None})
                     else:
                         try:
                             analyze_date = int(analyze_date)
@@ -434,17 +469,18 @@ def test_handler(message):
                             bot.send_message(cid, text_admin['analyze_date_test_check'])
                         else :
                             if 1 <= analyze_date <= 30:
-                                test.setdefault(key, analyze_date)
+                                test.update({key: analyze_date})
                             else :
                                 bot.send_message(cid, text_admin['analyze_date_test_check'])
                 elif key == 'description':
                     description = value
                     if description == "":
-                        test.setdefault(key, None)
+                        test.update({key: None})
                     elif len(description) > 255:
                         bot.send_message(cid, text_admin['description_test_check'])
                     else:
-                        test.setdefault(key, description)
+                        test.update({key: description})
+
 
         if len(test) == 9:
             insert_test_data(**test)
@@ -452,9 +488,16 @@ def test_handler(message):
             user_steps[cid] = 0
             test.clear()
             home_command(message)
-
     else:
-        unknown_message(message)
+        name = message.text
+        if len(name) > 45:
+            bot.send_message(cid, text_user['pet_name_check'])
+        else:
+            user_pets.update({'name': name})
+            insert_pet_data(user_id=cid, breed_id=user_pets['breed_id'], name=user_pets['name'], gender=None, age=None, weight=None, personality=None)
+            bot.send_message(cid, text_user['create_pet_success'].format(name))
+            user_steps[cid] = 0
+            user_pets.clear()
 
 
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3)
@@ -462,12 +505,12 @@ def breed_handler(message):
     cid = message.chat.id
     if cid in admins:
         name = message.text
-        if check_breed_name():
+        if check_breed_name(name):
             bot.send_message(cid, text_admin['name_breed_unique'])
         elif len(name) > 45:
             bot.send_message(cid,text_admin['name_breed_check'])
         else:
-            breed.setdefault('name', name)
+            breed.update({'name': name})
             markup = InlineKeyboardMarkup()
             markup.add(InlineKeyboardButton(text_admin['no'], callback_data='no_specifications_breed'), InlineKeyboardButton(text_admin['yes'], callback_data='yes_specifications_breed'))
             bot.send_message(cid, text_admin['specifications_breed'], reply_markup=markup)
@@ -483,7 +526,7 @@ def breed_specifications_handler(message):
         if len(specifications) > 255:
             bot.send_message(cid, text_admin['specifications_breed_check'])
         else:
-            breed.setdefault('specifications', specifications)
+            breed.update({'specifications': specifications})
             insert_breed_data(species=breed['species'], name=breed['name'], specifications=breed['specifications'])
             bot.send_message(cid, text_admin['success_create_breed'].format(breed['name']))
             user_steps[cid] = 0
