@@ -55,12 +55,12 @@ def show_member_user():
 def show_user_data(cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT * FROM user WHERE cid=%s;"
+    SQL_Quary = "SELECT first_name, last_name, username, national_code, phone, address FROM user WHERE cid=%s;"
     cursor.execute(SQL_Quary, (cid, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result
+    return result[0]
 
 def check_user_username(username):
     conn = mysql.connector.connect(**db_config)
@@ -85,10 +85,31 @@ def check_breed_name(name):
 def show_breed_name(species):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT id, name FROM breed WHERE species=%s"
+    SQL_Quary = "SELECT id, name FROM breed WHERE species=%s;"
     cursor.execute(SQL_Quary, (species, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return {i['id']:i['name'] for i in result}
     
+def show_pet(user_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT name FROM pet WHERE user_id=%s;"
+    cursor.execute(SQL_Quary, (user_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [i['name'] for i in result]
+
+
+def show_pet_data(user_id, name):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, gender, age, weight, personality FROM pet WHERE user_id=%s and name=%s;"
+    cursor.execute(SQL_Quary, (user_id, name))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+

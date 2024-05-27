@@ -75,27 +75,27 @@ def callback_handler(call):
             bot.send_message(cid, text_admin['specifications_breed_input'])
             user_steps[cid] = 3.1
     else:
-        if data.startswith('first_name'):
+        if data == 'first_name_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['first_name_edit'])
             user_steps[cid] = 1.1
-        elif data.startswith('last_name'):
+        elif data == 'last_name_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['last_name_edit'])
             user_steps[cid] = 1.2
-        elif data.startswith('username'):
+        elif data == 'username_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['username_edit'])
             user_steps[cid] = 1.3
-        elif data.startswith('national_code'):
+        elif data == 'national_code_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['national_code_edit'])
             user_steps[cid] = 1.4
-        elif data.startswith('phone'):
+        elif data == 'phone_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['phone_edit'])
             user_steps[cid] = 1.5
-        elif data.startswith('address'):
+        elif data == 'address_edit':
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['address_edit'])
             user_steps[cid] = 1.6
@@ -115,7 +115,19 @@ def callback_handler(call):
                 pass
             bot.send_message(cid, text_user['pet_name'])
             user_steps[cid] = 2
-            
+        elif data.startswith('edit_gender'):
+            pet_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            markup = InlineKeyboardMarkup()
+            for item in gender_enum:
+                markup.add(InlineKeyboardButton(text_user[item], callback_data=f"{item}_{pet_id}"))
+            bot.send_message(cid, text_user['pet_gender_edit'], reply_markup=markup)
+        elif data.startswith('male') or data.startswith('female'):
+            pet_id = int(data.split('_')[-1])
+            gender = data.split('_')[0]
+            markup = send_home()
+            edit_pet_gender(gender=gender, user_id=cid, id=pet_id)
+            bot.send_message(cid, text_user['gender_success'], reply_markup=markup)
 
 
 @bot.message_handler(commands=['start'])
@@ -172,16 +184,13 @@ def account_handler(message):
     cid = message.chat.id
     if cid not in admins:
         markup = InlineKeyboardMarkup()
-        for item in show_user_data(cid):
-            markup.add(InlineKeyboardButton(f"{text_user['first_name']} : {item['first_name']}", callback_data=f"first_name : {item['first_name']}"))
-            markup.add(InlineKeyboardButton(f"{text_user['last_name']} : {item['last_name']}", callback_data=f"last_name : {item['last_name']}"))
-            markup.add(InlineKeyboardButton(f"{text_user['username']} : {item['username']}", callback_data=f"username : {item['username']}"))
-            markup.add(InlineKeyboardButton(f"{text_user['national_code']} : {item['national_code']}", callback_data=f"national_code : {item['national_code']}"))
-            markup.add(InlineKeyboardButton(f"{text_user['phone']} : {item['phone']}", callback_data=f"phone : {item['phone']}"))
-            markup.add(InlineKeyboardButton(f"{text_user['address']} : {item['address']}", callback_data=f"address : {item['address']}"))
-            bot.send_message(cid, text_user['user_data'], reply_markup=markup)
-            bot.send_message(cid, text_user['user_data_edit'])
-    user_steps[cid] = 1
+        user_data = show_user_data(cid)
+        for key,value in user_data.items():
+            markup.add(InlineKeyboardButton(f"{text_user[key]} : {value}", callback_data=f"{key}_edit"))
+        bot.send_message(cid, text_user['user_data'], reply_markup=markup)
+    markup = send_home()
+    bot.send_message(cid, text_user['user_data_edit'], reply_markup=markup)
+
 
 @bot.message_handler(func=lambda message: message.text==buttons_admin['create_test_group'])
 def create_test_group_handler(message):
@@ -227,6 +236,9 @@ def pets_handler(message):
     cid = message.chat.id
     if cid not in admins:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
+        if len(show_pet(cid))!=0:
+            for item in show_pet(cid):
+                markup.add(item)
         markup.add(buttons_user['create_pet'])
         bot.send_message(cid, text_user['pet_menu'], reply_markup=markup)
     else:
@@ -241,6 +253,25 @@ def create_pet_handler(message):
         for item in species:
             markup.add(InlineKeyboardButton(text[item], callback_data=item))
         bot.send_message(cid, text['chooce_species'], reply_markup=markup)
+    else:
+        unknown_message()
+
+
+@bot.message_handler(func=lambda message:message.text in show_pet(message.chat.id))
+def pet_edit_handler(message):
+    cid = message.chat.id
+    name = message.text
+    if cid not in admins:
+        pet_data = show_pet_data(cid, name)
+        markup = InlineKeyboardMarkup()
+        for key,value in pet_data.items():
+            if key == 'id':
+                pet_id = value
+                continue
+            markup.add(InlineKeyboardButton(f"{text_user[key]} : {value}", callback_data=f"edit_{key}_{pet_id}"))
+        bot.send_message(cid, text_user['pet_data'].format(name), reply_markup=markup)
+        markup = send_home()
+        bot.send_message(cid, text_user['pet_data_edit'], reply_markup=markup)
     else:
         unknown_message()
 
@@ -260,7 +291,7 @@ def group_test_handler(message):
             user_steps[cid] = 0
             home_command(message)
     else:
-        bot.send_message(cid, text_user['user_data_edit'])
+        unknown_message()
 
 
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.1)
@@ -293,7 +324,6 @@ def last_name_edit_handler(message):
         unknown_message(message)
 
 
-
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.3)
 def username_edit_handler(message):
     cid = message.chat.id
@@ -321,7 +351,6 @@ def username_edit_handler(message):
     else:
         unknown_message(message)
   
-
 
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.4)
 def national_code_edit(message):
@@ -368,7 +397,6 @@ def address_edit(message):
             bot.send_message(cid, text_user['address_success'], reply_markup=markup)
     else:
         unknown_message(message)
-
 
 
 @bot.message_handler(func=lambda message: get_user_step(message.chat.id)==2)
@@ -480,8 +508,6 @@ def test_handler(message):
                         bot.send_message(cid, text_admin['description_test_check'])
                     else:
                         test.update({key: description})
-
-
         if len(test) == 9:
             insert_test_data(**test)
             bot.send_message(cid, text_admin['success_create_test'].format(test['parameter']))
