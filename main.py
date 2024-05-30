@@ -5,6 +5,8 @@ from DQL import *
 from config import *
 from text import *
 import re
+import jdatetime
+from datetime import datetime
 
 
 bot = telebot.TeleBot(BOT_TOKEN, num_threads=10)
@@ -14,6 +16,8 @@ user_steps = dict() # {cid, step,...}
 test = dict() # {test_group_id : ... , parameter : ..., type : ... , price : ... , unit : ..., minimum_range : ... , maximum_range : ... , analyze_date : ..., description : ...}
 breed = dict() # {species : ..., name : ..., specifications : ...}
 user_pets = dict() #{breed_id : ..., name : ...}
+pet_id_dict = dict() #{'id' : id}
+
 
 
 def get_member_user():
@@ -30,10 +34,19 @@ def send_home():
         return markup
 
 
-def is_valid(phone):
+def is_valid_phone(phone):
 	Pattern = re.compile("^(0|0098|\+98)?9\d{9}$") #start - group(0 or 0098 or +98) - 9 - exactly 9 digits - end
 	return Pattern.match(phone)
 
+
+def is_valid_date(birth_date):
+    try:
+        persian_date = datetime.strptime(birth_date, '%Y/%m/%d').date()
+    except:
+        return False
+    else:
+        gregorian_date = jdatetime.date.togregorian(persian_date)
+        return gregorian_date
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -55,7 +68,7 @@ def callback_handler(call):
             bot.send_message(cid, text_admin['template_test'], reply_markup=markup)
             bot.send_message(cid, text_admin['template_input_test'])
             user_steps[cid] = 2
-        elif data in species:
+        elif data in species_enum:
             breed.update({'species': data})
             bot.answer_callback_query(call_id, '✅')
             try:
@@ -99,7 +112,7 @@ def callback_handler(call):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_user['address_edit'])
             user_steps[cid] = 1.6
-        elif data in species:
+        elif data in species_enum:
             chosen_breed = show_breed_name(data)
             markup = InlineKeyboardMarkup()
             for key,value in chosen_breed.items():
@@ -127,7 +140,25 @@ def callback_handler(call):
             gender = data.split('_')[0]
             markup = send_home()
             edit_pet_gender(gender=gender, user_id=cid, id=pet_id)
-            bot.send_message(cid, text_user['gender_success'], reply_markup=markup)
+            bot.send_message(cid, text_user['pet_gender_success'], reply_markup=markup)
+        elif data.startswith('edit_birth_date'):
+            pet_id = int(data.split('_')[-1])
+            pet_id_dict.update({'id': pet_id})
+            bot.answer_callback_query(call_id, '✅')
+            bot.send_message(cid, text_user['pet_birth_date_edit'])
+            user_steps[cid] = 2.1
+        elif data.startswith('edit_weight'):
+            pet_id = int(data.split('_')[-1])
+            pet_id_dict.update({'id': pet_id})
+            bot.answer_callback_query(call_id, '✅')
+            bot.send_message(cid, text_user['pet_weight_edit'])
+            user_steps[cid] = 2.2
+        elif data.startswith('edit_personality'):
+            pet_id = int(data.split('_')[-1])
+            pet_id_dict.update({'id': pet_id})
+            bot.answer_callback_query(call_id, '✅')
+            bot.send_message(cid, text_user['pet_personality_edit'])
+            user_steps[cid] = 2.3
 
 
 @bot.message_handler(commands=['start'])
@@ -224,7 +255,7 @@ def create_breed_handler(message):
     cid = message.chat.id
     if cid in admins:
         markup = InlineKeyboardMarkup()
-        for item in species:
+        for item in species_enum:
             markup.add(InlineKeyboardButton(text[item], callback_data=item))
         bot.send_message(cid, text['chooce_species'], reply_markup=markup)
     else:
@@ -250,7 +281,7 @@ def create_pet_handler(message):
     cid = message.chat.id
     if cid not in admins:
         markup = InlineKeyboardMarkup()
-        for item in species:
+        for item in species_enum:
             markup.add(InlineKeyboardButton(text[item], callback_data=item))
         bot.send_message(cid, text['chooce_species'], reply_markup=markup)
     else:
@@ -375,7 +406,7 @@ def phone_edit(message):
     if cid not in admins:
         markup = send_home()
         phone = message.text
-        if is_valid(phone):
+        if is_valid_phone(phone):
             edit_phone(phone=phone, cid=cid)
             bot.send_message(cid, text_user['phone_success'])
         else :
@@ -446,7 +477,7 @@ def test_handler(message):
                         except:
                             bot.send_message(cid, text_admin['price_test_check'])
                         else:
-                            if len(str(price).split('.')[1]) > 10 or len(str(price).split('.')[-1]) > 2 :
+                            if len(str(price).split('.')[0]) > 8 or len(str(price).split('.')[-1]) > 2 :
                                 bot.send_message(cid, text_admin['price_test_check'])
                             else:
                                 test.update({key: price})
@@ -468,7 +499,7 @@ def test_handler(message):
                         except:
                             bot.send_message(cid, text_admin['minimum_range_test_check'])
                         else:
-                            if len(str(minimum_range).split('.')[1]) > 5 or len(str(minimum_range).split('.')[-1]) > 3 :
+                            if len(str(minimum_range).split('.')[0]) > 5 or len(str(minimum_range).split('.')[-1]) > 3 :
                                 bot.send_message(cid, text_admin['minimum_range_test_check'])
                             else:
                                 test.update({key: minimum_range})
@@ -482,7 +513,7 @@ def test_handler(message):
                         except:
                             bot.send_message(cid, text_admin['maximum_range_test_check'])
                         else:
-                            if len(str(maximum_range).split('.')[1]) > 5 or len(str(maximum_range).split('.')[-1]) > 3 :
+                            if len(str(maximum_range).split('.')[0]) > 5 or len(str(maximum_range).split('.')[-1]) > 3 :
                                 bot.send_message(cid, text_admin['maximum_range_test_check'])
                             else:
                                 test.update({key: maximum_range})
@@ -520,10 +551,67 @@ def test_handler(message):
             bot.send_message(cid, text_user['pet_name_check'])
         else:
             user_pets.update({'name': name})
-            insert_pet_data(user_id=cid, breed_id=user_pets['breed_id'], name=user_pets['name'], gender=None, age=None, weight=None, personality=None)
+            insert_pet_data(user_id=cid, breed_id=user_pets['breed_id'], name=user_pets['name'], gender=None, birth_date=None, weight=None, personality=None)
             bot.send_message(cid, text_user['create_pet_success'].format(name))
             user_steps[cid] = 0
             user_pets.clear()
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.1)
+def pet_birth_date_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        birth_date_str = message.text
+        if is_valid_date(birth_date_str) == False:
+            bot.send_message(cid, text_user['pet_birth_date_check'], reply_markup=markup)
+        else:
+            birth_date = is_valid_date(birth_date_str)
+            edit_pet_birth_date(birh_date=birth_date, user_id=cid, id=pet_id_dict['id'])
+            bot.send_message(cid, text_user['pet_birth_date_success'], reply_markup=markup) 
+            pet_id_dict.clear()
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.2)
+def pet_weight_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        weight = message.text
+        try:
+            weight = float(weight)
+        except:
+            bot.send_message(cid, text_user['pet_weight_check'], reply_markup=markup)
+        else:
+            if len(str(weight).split('.')[0]) > 3 or len(str(weight).split('.')[-1]) > 3:
+                bot.send_message(cid, text_user['pet_weight_check'], reply_markup=markup)
+            else:
+                edit_pet_weight(weight=weight, user_id=cid, id=pet_id_dict['id'])
+                bot.send_message(cid, text_user['pet_weight_success'], reply_markup=markup) 
+                pet_id_dict.clear()  
+                user_steps[cid] = 0               
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.3)
+def pet_personality_edit_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        markup = send_home()
+        personality = message.text
+        if len(personality) > 255:
+            bot.send_message(cid, text_user['pet_personality_check'], reply_markup=markup)
+        else:
+            edit_pet_personality(personality=personality, user_id=cid, id=pet_id_dict['id'])
+            bot.send_message(cid, text_user['pet_personality_success'], reply_markup=markup)
+            pet_id_dict.clear()  
+            user_steps[cid] = 0     
+    else:
+        unknown_message(message)
 
 
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3)
@@ -566,6 +654,7 @@ def breed_specifications_handler(message):
 def unknown_message(message):
     cid = message.chat.id
     bot.send_message(cid, text['unknown_message'])
+
 
 users = get_member_user()
 bot.infinity_polling()

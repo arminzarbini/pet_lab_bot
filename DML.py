@@ -92,13 +92,13 @@ def insert_breed_data(species, name, specifications=None):
     conn.commit()
     conn.close()
 
-def insert_pet_data(user_id, breed_id, name, gender=None, age=None, weight=None, personality=None):
+def insert_pet_data(user_id, breed_id, name, gender=None, birth_date=None, weight=None, personality=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     SQL_Quary = """
-    INSERT INTO pet (user_id, breed_id, name, gender, age, weight, personality) VALUES (%s, %s, %s, %s, %s, %s, %s);
+    INSERT INTO pet (user_id, breed_id, name, gender, birth_date, weight, personality) VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-    cursor.execute(SQL_Quary, (user_id, breed_id, name, gender, age, weight, personality))
+    cursor.execute(SQL_Quary, (user_id, breed_id, name, gender, birth_date, weight, personality))
     cursor.close()
     conn.commit()
     conn.close()
@@ -112,6 +112,32 @@ def edit_pet_gender(gender, user_id, id):
     conn.commit()
     conn.close()
 
+def edit_pet_birth_date(birh_date, user_id, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE pet SET birth_date=%s WHERE user_id=%s and id=%s;"
+    cursor.execute(SQL_Quary, (birh_date, user_id, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_pet_weight(weight, user_id, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE pet SET weight=%s WHERE user_id=%s and id=%s;"
+    cursor.execute(SQL_Quary, (weight, user_id, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_pet_personality(personality, user_id, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE pet SET personality=%s WHERE user_id=%s and id=%s;"
+    cursor.execute(SQL_Quary, (personality, user_id, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 
 

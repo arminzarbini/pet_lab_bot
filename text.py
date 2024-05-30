@@ -82,7 +82,7 @@ text_user = {
     'pet_name_check'                : 'برای نام حیوان خانگی بیشتر از 45 کاراکتر مجاز نیست',
     'create_pet_success'            : 'حیوان خانگی {} با موفقیت ایجاد شد',
     'gender'                        : 'جنسیت',
-    'age'                           : 'تاریخ تولد',
+    'birth_date'                    : 'تاریخ تولد',
     'weight'                        : 'وزن',
     'personality'                   : 'خصوصیات شخصیتی',
     'pet_data'                      : 'اطلاعات حیوان خانگی {}',
@@ -90,8 +90,17 @@ text_user = {
     'male'                          : 'نر',
     'female'                        : 'ماده',
     'pet_gender_edit'               : 'جنسیت را انتخاب کنید',
-    'gender_success'                : 'جنسیت جدید با موفقیت ایجاد شد',
-
+    'pet_gender_success'            : 'جنسیت با موفقیت ثبت شد',
+    'pet_birth_date_edit'           : 'تاریخ تولد را وارد کنید\nمثال : 1397/07/24',
+    'pet_birth_date_check'          : 'تاریخ تولد به درستی وارد نشده است',
+    'pet_birth_date_success'        : 'تاریخ تولد با موفقیت ثبت شد',
+    'pet_weight_edit'               : 'وزن را وارد کنید\nمثال:4.8',
+    'pet_weight_check'              : 'برای وزن اعداد تا 3 رقم صحیح و 3 رقم اعشار مجاز است',
+    'pet_weight_success'            : 'وزن با موفقیت ثبت شد',
+    'pet_personality_edit'          : 'خصوصیات شخصیتی را وارد کنید',
+    'pet_personality_check'         : 'برای خصوصیات شخصیتی بیشتر از 255 کاراکتر مجاز نیست',
+    'pet_personality_success'       : 'خصوصیات شخصیتی با موفقیت ثبت شد',
+    
 }
 
 buttons = {

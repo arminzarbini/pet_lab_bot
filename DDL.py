@@ -57,8 +57,8 @@ def create_pet_table():
     breed_id SMALLINT UNSIGNED NOT NULL,
     name varchar(45) not null,
     gender ENUM('male', 'female'),
-    age TINYINT UNSIGNED,
-    weight DECIMAL(3,1),
+    birth_date DATE,
+    weight DECIMAL(6,3),
     personality TINYTEXT,
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES user(cid),
@@ -95,8 +95,8 @@ def create_test_table():
     type ENUM('quantity', 'quality') NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     unit VARCHAR(10),
-    minimum_range DECIMAL(5,3),
-	maximum_range DECIMAL(5,3),
+    minimum_range DECIMAL(8,3),
+	maximum_range DECIMAL(8,3),
     analyze_date tinyint(30),
     description TINYTEXT,
     PRIMARY KEY (id),
@@ -155,7 +155,7 @@ def create_result_table():
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	reception_test_id INT UNSIGNED NOT NULL,
 	date DATETIME DEFAULT CURRENT_TIMESTAMP,
-	result_quantity DECIMAL(5,3),
+	result_quantity DECIMAL(8,3),
 	result_quality ENUM('negative', 'positive'),
 	analysis ENUM('high','low','normal'),
 	conclusion TEXT,
@@ -168,6 +168,16 @@ def create_result_table():
     conn.close()
 
 
+if __name__ == "__main__":
+    create_database()
+    create_user_table()
+    create_breed_table()
+    create_pet_table()
+    create_test_group_table()
+    create_test_table()
+    create_reception_table()
+    create_reception_test_table()
+    create_result_table()
 
 
 def create_table():
@@ -182,18 +192,3 @@ def create_table():
     FOREIGN KEY (user_id) REFERENCES user(cid)
     );
     """
-
-
-
-
-
-if __name__ == "__main__":
-    create_database()
-    create_user_table()
-    create_breed_table()
-    create_pet_table()
-    create_test_group_table()
-    create_test_table()
-    create_reception_table()
-    create_reception_test_table()
-    create_result_table()

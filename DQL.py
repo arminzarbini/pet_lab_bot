@@ -102,14 +102,12 @@ def show_pet(user_id):
     conn.close()
     return [i['name'] for i in result]
 
-
 def show_pet_data(user_id, name):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT id, gender, age, weight, personality FROM pet WHERE user_id=%s and name=%s;"
+    SQL_Quary = "SELECT id, gender, birth_date, weight, personality FROM pet WHERE user_id=%s and name=%s;"
     cursor.execute(SQL_Quary, (user_id, name))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return result[0]
-
