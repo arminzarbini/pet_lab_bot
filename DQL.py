@@ -35,7 +35,7 @@ def show_test_group():
 def check_test_parameter(parameter):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT parameter FROM test WHERE parameter=%s;"
+    SQL_Quary = "SELECT parameter FROM test WHERE paramshow_member_usereter=%s;"
     cursor.execute(SQL_Quary, (parameter, ))
     result = cursor.fetchall()
     cursor.close()
@@ -55,7 +55,7 @@ def show_member_user():
 def show_user_data(cid):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT first_name, last_name, username, national_code, phone, address FROM user WHERE cid=%s;"
+    SQL_Quary = "SELECT first_name, last_name, username, national_code, phone, address FROM user WHERE cid=%s LIMIT 1;"
     cursor.execute(SQL_Quary, (cid, ))
     result = cursor.fetchall()
     cursor.close()
@@ -111,3 +111,24 @@ def show_pet_data(user_id, name):
     cursor.close()
     conn.close()
     return result[0]
+
+def show_pet_id(user_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id,name FROM pet WHERE user_id=%s"
+    cursor.execute(SQL_Quary, (user_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return {i['id']:i['name'] for i in result}
+
+
+def show_test():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, parameter, price, analyze_date FROM test;"
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result

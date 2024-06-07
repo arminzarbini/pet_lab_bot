@@ -43,9 +43,7 @@ text_admin = {
     'success_create_breed'          : 'نژاد حیوان {} با موفقیت ایجاد شد',
     'specifications_breed_input'    : 'مشخصات نژاد حیوان را وارد کنید',
     'specifications_breed_check'    : 'برای مشخصات نژاد بیشتر از 255 کاراکتر مجاز نیست',
-
 }
-
 text_user = {
     'compelete_edit_account'        : 'اطلاعات حساب',
     'first_name'                    : 'نام',
@@ -100,23 +98,27 @@ text_user = {
     'pet_personality_edit'          : 'خصوصیات شخصیتی را وارد کنید',
     'pet_personality_check'         : 'برای خصوصیات شخصیتی بیشتر از 255 کاراکتر مجاز نیست',
     'pet_personality_success'       : 'خصوصیات شخصیتی با موفقیت ثبت شد',
-    
+    'choose_pet'                    : 'حیوان خانگی مورد نظر را انتخاب کنید',
+    'choose_test'                   : 'آزمایش های مورد نظر را انتخاب کنید',
+    'parameter'                     : 'آزمایش',
+    'price'                         : 'قیمت',
+    'analyze_date'                  : 'زمان آزمون',
+    'toman'                         : 'تومان',
+    'order'                         : 'ثبت سفارش',
+    'test_group'                    : 'گروه آزمایش',
 }
-
 buttons = {
     'home'                          : 'منوی اصلی',
 }
-
-
 buttons_admin = {
     'create_test_group'             : 'تعریف گروه آزمون',
     'create_test'                   : 'تعریف آزمایش',
     'create_species'                : 'تعریف گونه حیوان',
     'create_breed'                  : 'تعریف نژاد حیوان',
-
 }
 buttons_user = {
     'account'                       : 'حساب کاربری',
     'pets'                          : 'مدیریت حیوان خانگی',
     'create_pet'                    : 'ایجاد حیوان خانگی',
+    'reception_request'             : 'درخواست آزمایش',
 }
