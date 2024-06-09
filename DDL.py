@@ -124,6 +124,7 @@ def create_reception_table():
 	is_pay TINYINT(1) DEFAULT 0,
 	PRIMARY KEY (id),
 	FOREIGN KEY (pet_id) REFERENCES pet(id)
+    UNIQUE (code)
     );
     """
     cursor.execute(SQL_Quary)

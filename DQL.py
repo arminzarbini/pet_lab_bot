@@ -122,13 +122,88 @@ def show_pet_id(user_id):
     conn.close()
     return {i['id']:i['name'] for i in result}
 
-
 def show_test():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT id, parameter, price, analyze_date FROM test;"
+    SQL_Quary = "SELECT id, parameter, price FROM test;"
     cursor.execute(SQL_Quary)
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return result
+
+def show_reception(pet_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id FROM reception WHERE pet_id=%s"
+    cursor.execute(SQL_Quary, (pet_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [i['id'] for i in result][-1]
+
+def show_reception_request():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT reception.id, pet.name, user.username, reception.request_date 
+    FROM reception 
+    INNER JOIN pet
+    ON reception.pet_id=pet.id
+    INNER JOIN user
+    ON pet.user_id=user.cid
+    ORDER BY reception.request_date DESC;
+"""
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+def show_reception_test(reception_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT test.parameter
+    FROM reception_test
+    INNER JOIN test
+    ON reception_test.test_id=test.id
+    WHERE reception_id=%s;
+"""
+    cursor.execute(SQL_Quary, (reception_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [i['parameter'] for i in result]
+
+def show_reception_data(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT code, sampling_date, answer_date, is_pay FROM reception WHERE id=%s;"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+
+def check_reception_code_exist(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT code FROM reception WHERE id=%s;"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]['code']!=None
+
+
+def check_reception_code(code):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT code FROM reception WHERE code=%s;"
+    cursor.execute(SQL_Quary, (code, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return len(result)!=0
+

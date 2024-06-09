@@ -139,6 +139,35 @@ def edit_pet_personality(personality, user_id, id):
     conn.commit()
     conn.close()
 
+def insert_reception_data(pet_id, code=None, reception_date=None, sampling_date=None, answer_date=None, comment=None, is_pay=None):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "INSERT INTO RECEPTION (pet_id, code, reception_date, sampling_date, answer_date, comment, is_pay) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    cursor.execute(SQL_Quary, (pet_id, code, reception_date, sampling_date, answer_date, comment, is_pay))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def insert_reception_test_data(reception_id, test_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "INSERT INTO reception_test(reception_id, test_id) VALUES (%s, %s);"
+    cursor.execute(SQL_Quary, (reception_id, test_id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_reception_code(code, reception_date, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE reception SET code=%s, reception_date=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (code, reception_date, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+
+
 
 
 
@@ -151,32 +180,6 @@ def inesrt_payment_data(user_id, ammount):
     cursor.close()
     conn.commit()
     conn.close()
-
-
-
-def insert_reception_data(vet_id, code=None, reception_date=None, Sampling_date=None, answer_date=None, comment=None, is_pay=None):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO reception(vet_id, code, reception_date, Sampling_date, answer_date, comment, is_pay) VALUES (%s, %s, %s, %s, %s, %s, %s);
-    """
-    cursor.execute(SQL_Quary, (vet_id, code, reception_date, Sampling_date, answer_date, comment, is_pay))
-    cursor.close()
-    conn.commit()
-    conn.close()
-
-
-def insert_reception_test_data(reception_id, test_id):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO reception_test(reception_id, test_id) VALUES (%s, %s);
-    """
-    cursor.execute(SQL_Quary, (reception_id, test_id))
-    cursor.close()
-    conn.commit()
-    conn.close()
-
 
 
 def insert_result_data(reception_test_id, result_quantity=None, result_quality=None, analysis=None, conclusion=None):

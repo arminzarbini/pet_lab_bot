@@ -43,6 +43,16 @@ text_admin = {
     'success_create_breed'          : 'نژاد حیوان {} با موفقیت ایجاد شد',
     'specifications_breed_input'    : 'مشخصات نژاد حیوان را وارد کنید',
     'specifications_breed_check'    : 'برای مشخصات نژاد بیشتر از 255 کاراکتر مجاز نیست',
+    'requests_test'                 : 'درخواست های آزمایش',
+    'request_items'                 : 'پارامترهای درخواستی برای {}',
+    'code'                          : 'کد پذیزش',
+    'sampling_date'                 : 'تاریخ انجام آزمون',
+    'answer_date'                   : 'تاریخ جوابدهی',
+    'is_pay'                        : 'وضعیت پرداخت',
+    'reception_data_edit'           : 'برای ویرایش اطلاعات پذیرش روی دکمه هر گزینه کلیک کنید',
+    'reception_code_exist'          : 'کد پذیرش این درخواست قبلا ایجاد شده است',
+    'reception_code_try_again'      : 'مجدد تلاش کنید',
+    'reception_code_success'        : 'کد آزمایش با موفقیت ایجاد شد',
 }
 text_user = {
     'compelete_edit_account'        : 'اطلاعات حساب',
@@ -102,10 +112,12 @@ text_user = {
     'choose_test'                   : 'آزمایش های مورد نظر را انتخاب کنید',
     'parameter'                     : 'آزمایش',
     'price'                         : 'قیمت',
-    'analyze_date'                  : 'زمان آزمون',
     'toman'                         : 'تومان',
     'order'                         : 'ثبت سفارش',
-    'test_group'                    : 'گروه آزمایش',
+    'return'                        : 'بازگشت',
+    'no_choose_test'                : 'ابتدا آزمایش های مورد نظر خود را انتخاب کنید',
+    'reception_request_success'     : 'درخواست آزمایش با موفقیت ثبت شد',
+
 }
 buttons = {
     'home'                          : 'منوی اصلی',
@@ -115,6 +127,7 @@ buttons_admin = {
     'create_test'                   : 'تعریف آزمایش',
     'create_species'                : 'تعریف گونه حیوان',
     'create_breed'                  : 'تعریف نژاد حیوان',
+    'reception_request'             : 'مشاهده درخواست های آزمایش',
 }
 buttons_user = {
     'account'                       : 'حساب کاربری',
