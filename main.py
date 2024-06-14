@@ -9,6 +9,7 @@ import jdatetime
 from datetime import datetime
 import random
 import string
+import datetime
 
 bot = telebot.TeleBot(BOT_TOKEN, num_threads=10)
 hideboard = ReplyKeyboardRemove()
@@ -19,6 +20,7 @@ breed = dict() # {species : ..., name : ..., specifications : ...}
 user_pets = dict() #{breed_id : ..., name : ...}
 pet_id_dict = dict() #{'id' : id}
 pet_reception = dict() #{id : {test_id,...}}
+reception_id_dict = dict() #{id : id}
 
 def get_member_user():
     member_user = show_member_user()
@@ -36,15 +38,25 @@ def is_valid_phone(phone):
 	Pattern = re.compile("^(0|0098|\+98)?9\d{9}$") #start - group(0 or 0098 or +98) - 9 - exactly 9 digits - end
 	return Pattern.match(phone)
 
-def is_valid_date(birth_date):
+def is_valid_date(date):
     try:
-        persian_date = datetime.strptime(birth_date, '%Y/%m/%d').date()
+        persian_date = datetime.datetime.strptime(date, '%Y/%m/%d').date()
     except:
         return False
     else:
         gregorian_date = jdatetime.date.togregorian(persian_date)
         return gregorian_date
     
+def show_persian_datetime(datetime):
+    persian_datetime = jdatetime.datetime.fromgregorian(datetime=datetime)
+    persian_datetime_str = jdatetime.datetime.strftime(persian_datetime, "%Y/%m/%d %H:%M:%S")
+    return persian_datetime_str
+
+def show_persian_date(date):
+    persian_date = jdatetime.date.fromgregorian(date=date)
+    persian_date_str = jdatetime.date.strftime(persian_date, "%Y/%m/%d")
+    return persian_date_str
+
 def reception_pet_markup(cid):
     markup = InlineKeyboardMarkup()
     for key,value in show_pet_id(cid).items():
@@ -62,20 +74,42 @@ def reception_test_markup(pet_id):
     markup.add(InlineKeyboardButton(text_user['return'], callback_data='return'))
     return markup
 
-def reception_request_markup():
+def request_markup():
     markup = InlineKeyboardMarkup()
-    for item in show_reception_request():
-        persian_datetime = jdatetime.datetime.fromgregorian(datetime=item['request_date'])
-        persian_datetime_str = jdatetime.datetime.strftime(persian_datetime, "%Y/%m/%d %H:%M:%S")
+    for item in show_request():
+        persian_datetime_str = show_persian_datetime(item['request_date'])
         markup.add(InlineKeyboardButton(f"{item['username']} - {persian_datetime_str}", callback_data=f"request_{item['name']}_{item['id']}")) 
     return markup 
+
+def reception_markup():
+    markup = InlineKeyboardMarkup()
+    for item in show_reception():
+        persian_datetime_str = show_persian_datetime(item['reception_date'])
+        markup.add(InlineKeyboardButton(f"{item['username']} - {persian_datetime_str} - {item['code']}", callback_data=f"reception_{item['name']}_{item['id']}"))
+    return markup
+
+def request_edit_markup(reception_id):
+    markup = InlineKeyboardMarkup()
+    reception_data = show_reception_data(reception_id)
+    for key in reception_data.keys():
+        if key == 'code':
+            markup.add(InlineKeyboardButton(text_admin[key], callback_data=f"{key}_edit_{reception_id}"))
+            break
+    return markup
 
 def reception_edit_markup(reception_id):
     markup = InlineKeyboardMarkup()
     reception_data = show_reception_data(reception_id)
     for key,value in reception_data.items():
-        markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value}", callback_data=f"{key}_edit_{reception_id}"))
+        if key == 'code':
+            continue
+        elif isinstance(value, datetime.date):
+            persian_date_str = show_persian_date(value)
+            markup.add(InlineKeyboardButton(f"{text_admin[key]} : {persian_date_str}", callback_data=f"{key}_edit_{reception_id}"))
+        else:
+            markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value}", callback_data=f"{key}_edit_{reception_id}"))
     return markup
+    
     
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
@@ -118,25 +152,45 @@ def callback_handler(call):
         elif data.startswith('request'):
             reception_id = int(data.split('_')[-1])
             pet_name = data.split('_')[-2]
-            markup = reception_edit_markup(reception_id)
-            bot.edit_message_text(text_admin['reception_data_edit'],cid, mid)
+            comment = show_reception_comment(reception_id)
+            markup = request_edit_markup(reception_id)
+            bot.edit_message_text(text_admin['generate_reception_code'],cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
             bot.send_message(cid, text_admin['request_items'].format(pet_name))
             for item in show_reception_test(reception_id):
-                bot.send_message(cid, item)
+                bot.send_message(cid, f"❎{item}❎")
+            bot.send_message(cid, text_admin['comment'].format(comment))
+        elif data.startswith('reception'):
+            reception_id = int(data.split('_')[-1])
+            pet_name = data.split('_')[-2]
+            comment = show_reception_comment(reception_id)
+            markup = reception_edit_markup(reception_id)
+            bot.edit_message_text(text_admin['reception_edit'],cid, mid)
+            bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
+            bot.send_message(cid, text_admin['request_items'].format(pet_name))
+            for item in show_reception_test(reception_id):
+                bot.send_message(cid, f"❎{item}❎")
+            bot.send_message(cid, text_admin['comment'].format(comment))
         elif data.startswith('code_edit'):
             reception_id = int(data.split('_')[-1])
             bot.answer_callback_query(call_id, '✅')
-            if check_reception_code_exist(reception_id):
-                bot.send_message(cid, text_admin['reception_code_exist'])
+            code = ''.join(random.choices(string.digits + string.ascii_uppercase, k=5))
+            if check_reception_code(code):
+                bot.send_message(cid, text_admin['reception_code_try_again'])
             else:
-                code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                if check_reception_code(code):
-                    bot.send_message(cid, text_admin['reception_code_try_again'])
-                else:
-                    reception_date = datetime.now()
-                    edit_reception_code(code=code, reception_date=reception_date, id=reception_id)
-                    bot.send_message(cid, text_admin['reception_code_success'])
+                reception_date = datetime.datetime.now()
+                edit_reception_code_date(code=code, reception_date=reception_date, id=reception_id)
+                if (check_reception_test_analyze_date(reception_id)) != None:
+                    analyze_date = check_reception_test_analyze_date(reception_id)
+                    answer_date = datetime.datetime.now() + datetime.timedelta(analyze_date)
+                    edit_reception_answer_date(answer_date=answer_date, id=reception_id)
+                bot.send_message(cid, text_admin['reception_code_success'])
+        elif data.startswith('answer_date_edit'):
+            reception_id = int(data.split('_')[-1])
+            reception_id_dict.update({'id': reception_id})
+            bot.answer_callback_query(call_id, '✅')
+            bot.send_message(cid, text_admin['reception_answer_date_edit'])
+            user_steps[cid] = 4
     else:
         if data == 'first_name_edit':
             bot.answer_callback_query(call_id, '✅')
@@ -230,26 +284,41 @@ def callback_handler(call):
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
         elif data.startswith("order"):
             pet_id = int(data.split('_')[-1])
-            bot.answer_callback_query(call_id, '✅')
             if len(pet_reception[pet_id]) == 0:
+                bot.answer_callback_query(call_id, '❌')
                 bot.send_message(cid, text_user['no_choose_test'])
             else:
-                insert_reception_data(pet_id=pet_id)
-                reception_id = show_reception(pet_id)
-                for item in pet_reception[pet_id]:
-                    insert_reception_test_data(reception_id=reception_id, test_id=item)
-                pet_reception[pet_id].clear()
                 try:
                     bot.delete_message(cid, mid)
                 except:
                     pass
-                bot.send_message(cid, text_user['reception_request_success'])
+                bot.answer_callback_query(call_id, '✅')
+                markup = InlineKeyboardMarkup()
+                markup.add(InlineKeyboardButton(text['no'], callback_data=f"no_reception_comment_{pet_id}"), InlineKeyboardButton(text['yes'], callback_data=f"yes_reception_comment_{pet_id}"))
+                bot.send_message(cid, text_user['reception_comment'], reply_markup=markup)
         elif data == 'return':
             markup = reception_pet_markup(cid)
             bot.edit_message_text(text_user['choose_pet'], cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
-            
+        elif data.startswith('no_reception_comment'):
+            pet_id = int(data.split('_')[-1])   
+            insert_reception_data(pet_id=pet_id)        
+            reception_id = show_reception_id(pet_id)
+            for item in pet_reception[pet_id]:
+                insert_reception_test_data(reception_id=reception_id, test_id=item)
+            pet_reception[pet_id].clear()
+            bot.send_message(cid, text_user['reception_request_success'])
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('yes_reception_comment'):
+            pet_id = int(data.split('_')[-1])   
+            pet_id_dict.update({'id': pet_id})
+            bot.send_message(cid, text_user['reception_comment_input'])
+            user_steps[cid] = 12
 
+            
 @bot.message_handler(commands=['start'])
 def start_command(message):
     cid = message.chat.id
@@ -281,7 +350,7 @@ def home_command(message):
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'])
         markup.add(buttons_admin['create_breed'])
-        markup.add(buttons_admin['reception_request'])
+        markup.add(buttons_admin['reception_manage'], buttons_admin['request_manage'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
     else:
@@ -389,15 +458,25 @@ def reception_request_handler(message):
        unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['reception_request'])
-def reception_request_handler(message):
+@bot.message_handler(func=lambda message:message.text==buttons_admin['request_manage'])
+def request_manage_handler(message):
     cid = message.chat.id
     if cid in admins:
-        markup = reception_request_markup()
+        markup = request_markup()
         bot.send_message(cid, text_admin['requests_test'], reply_markup=markup)
     else:
         unknown_message(message)
     
+
+@bot.message_handler(func=lambda message:message.text==buttons_admin['reception_manage'])
+def reception_manage_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        markup = reception_markup()
+        bot.send_message(cid,text_admin['reception_test'], reply_markup=markup)
+    else:
+        unknown_message(message)
+
 
 @bot.message_handler(func=lambda message:message.text in show_pet(message.chat.id))
 def pet_edit_handler(message):
@@ -410,7 +489,11 @@ def pet_edit_handler(message):
             if key == 'id':
                 pet_id = value
                 continue
-            markup.add(InlineKeyboardButton(f"{text_user[key]} : {value}", callback_data=f"edit_{key}_{pet_id}"))
+            elif isinstance(value, datetime.date):
+                persian_date_str = show_persian_date(value)
+                markup.add(InlineKeyboardButton(f"{text_user[key]} : {persian_date_str}", callback_data=f"edit_{key}_{pet_id}"))
+            else:
+                markup.add(InlineKeyboardButton(f"{text_user[key]} : {value}", callback_data=f"edit_{key}_{pet_id}"))
         bot.send_message(cid, text_user['pet_data'].format(name), reply_markup=markup)
         markup = send_home()
         bot.send_message(cid, text_user['pet_data_edit'], reply_markup=markup)
@@ -567,7 +650,7 @@ def breed_handler(message):
         else:
             breed.update({'name': name})
             markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton(text_admin['no'], callback_data='no_specifications_breed'), InlineKeyboardButton(text_admin['yes'], callback_data='yes_specifications_breed'))
+            markup.add(InlineKeyboardButton(text['no'], callback_data='no_specifications_breed'), InlineKeyboardButton(text['yes'], callback_data='yes_specifications_breed'))
             bot.send_message(cid, text_admin['specifications_breed'], reply_markup=markup)
     else:
         unknown_message(message)
@@ -589,6 +672,21 @@ def breed_specifications_handler(message):
             home_command(message)
     else:
         unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==4)
+def reception_answer_date_edit(message):
+    cid = message.chat.id
+    if cid in admins:
+        answer_date = message.text
+        if is_valid_date(answer_date) == False:
+            bot.send_message(cid, text_admin['reception_answer_date_check'])
+        else:
+            answer_date = is_valid_date(answer_date)
+            edit_reception_answer_date(answer_date=answer_date, id=reception_id_dict['id'])
+            bot.send_message(cid, text_admin['reception_answer_date_success']) 
+            reception_id_dict.clear()
+            user_steps[cid] = 0
 
 
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==10.1)
@@ -769,6 +867,25 @@ def pet_personality_edit_handler(message):
     else:
         unknown_message(message)
         
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==12)
+def reception_comment_handler(message):
+    cid = message.chat.id
+    if cid not in admins:
+        comment = message.text
+        if len(comment) > 255:
+            bot.send_message(cid, text_user['reception_comment_check'])
+        else:
+            pet_id = pet_id_dict['id']
+            insert_reception_data(pet_id=pet_id, comment=comment)
+            reception_id = show_reception_id(pet_id)
+            for item in pet_reception[pet_id]:
+                insert_reception_test_data(reception_id=reception_id, test_id=item)
+            pet_reception[pet_id].clear()
+            bot.send_message(cid, text_user['reception_request_success'])
+            pet_id_dict.clear()
+            user_steps[cid] = 0
+
 
 @bot.message_handler(func=lambda message: True)
 def unknown_message(message):

@@ -35,7 +35,7 @@ def show_test_group():
 def check_test_parameter(parameter):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT parameter FROM test WHERE paramshow_member_usereter=%s;"
+    SQL_Quary = "SELECT parameter FROM test WHERE parameter=%s;"
     cursor.execute(SQL_Quary, (parameter, ))
     result = cursor.fetchall()
     cursor.close()
@@ -132,7 +132,7 @@ def show_test():
     conn.close()
     return result
 
-def show_reception(pet_id):
+def show_reception_id(pet_id):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT id FROM reception WHERE pet_id=%s"
@@ -142,16 +142,17 @@ def show_reception(pet_id):
     conn.close()
     return [i['id'] for i in result][-1]
 
-def show_reception_request():
+def show_request():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT reception.id, pet.name, user.username, reception.request_date 
-    FROM reception 
+    SELECT reception.id, pet.name, user.username, reception.request_date
+    FROM reception
     INNER JOIN pet
     ON reception.pet_id=pet.id
     INNER JOIN user
     ON pet.user_id=user.cid
+    WHERE reception.code IS NULL;
     ORDER BY reception.request_date DESC;
 """
     cursor.execute(SQL_Quary)
@@ -159,6 +160,26 @@ def show_reception_request():
     cursor.close()
     conn.close()
     return result
+
+def show_reception():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT reception.id, pet.name, user.username, reception.code, reception.reception_date
+    FROM reception
+    INNER JOIN pet
+    ON reception.pet_id=pet.id
+    INNER JOIN user
+    ON pet.user_id=user.cid
+    WHERE reception.code IS NOT NULL;
+    ORDER BY reception.reception_date DESC;
+"""
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
 
 def show_reception_test(reception_id):
     conn = mysql.connector.connect(**db_config)
@@ -179,23 +200,12 @@ def show_reception_test(reception_id):
 def show_reception_data(id):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT code, sampling_date, answer_date, is_pay FROM reception WHERE id=%s;"
+    SQL_Quary = "SELECT code, answer_date, is_pay FROM reception WHERE id=%s;"
     cursor.execute(SQL_Quary, (id, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
     return result[0]
-
-def check_reception_code_exist(id):
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT code FROM reception WHERE id=%s;"
-    cursor.execute(SQL_Quary, (id, ))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return result[0]['code']!=None
-
 
 def check_reception_code(code):
     conn = mysql.connector.connect(**db_config)
@@ -207,3 +217,29 @@ def check_reception_code(code):
     conn.close()
     return len(result)!=0
 
+def check_reception_test_analyze_date(reception_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT test.analyze_date
+    FROM reception_test
+    INNER JOIN test
+    ON reception_test.test_id=test.id
+    WHERE reception_id=%s AND test.analyze_date IS NOT NULL;
+"""
+    cursor.execute(SQL_Quary, (reception_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if len ([i['analyze_date'] for i in result])!=0:
+        return max([i['analyze_date'] for i in result])
+    
+def show_reception_comment(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT comment FROM reception WHERE id=%s;"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]['comment']

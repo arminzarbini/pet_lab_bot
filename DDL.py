@@ -93,7 +93,7 @@ def create_test_table():
     test_group_id SMALLINT UNSIGNED NOT NULL,
     parameter VARCHAR(45) NOT NULL,
     type ENUM('quantity', 'quality') NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,3) NOT NULL,
     unit VARCHAR(10),
     minimum_range DECIMAL(8,3),
 	maximum_range DECIMAL(8,3),
@@ -118,12 +118,11 @@ def create_reception_table():
 	code CHAR(5),
 	request_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 	reception_date DATETIME,
-	sampling_date DATETIME,
 	answer_date DATE,
 	comment TINYTEXT,
 	is_pay TINYINT(1) DEFAULT 0,
 	PRIMARY KEY (id),
-	FOREIGN KEY (pet_id) REFERENCES pet(id)
+	FOREIGN KEY (pet_id) REFERENCES pet(id),
     UNIQUE (code)
     );
     """
