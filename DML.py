@@ -139,11 +139,11 @@ def edit_pet_personality(personality, user_id, id):
     conn.commit()
     conn.close()
 
-def insert_reception_data(pet_id, code=None, reception_date=None, answer_date=None, comment=None, is_pay=None):
+def insert_reception_data(pet_id, code=None, reception_date=None, answer_date=None, comment=None, receipt_image_file_id=None, is_pay=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = "INSERT INTO RECEPTION (pet_id, code, reception_date, answer_date, comment, is_pay) VALUES (%s, %s, %s, %s, %s, %s);"
-    cursor.execute(SQL_Quary, (pet_id, code, reception_date, answer_date, comment, is_pay))
+    SQL_Quary = "INSERT INTO RECEPTION (pet_id, code, reception_date, answer_date, comment,receipt_image_file_id, is_pay) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    cursor.execute(SQL_Quary, (pet_id, code, reception_date, answer_date, comment, receipt_image_file_id, is_pay))
     cursor.close()
     conn.commit()
     conn.close()
@@ -175,6 +175,14 @@ def edit_reception_answer_date(answer_date, id):
     conn.commit()
     conn.close()
 
+def edit_reception_receipt_image_file_id(receipt_image_file_id, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE reception SET receipt_image_file_id=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (receipt_image_file_id, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 
 
