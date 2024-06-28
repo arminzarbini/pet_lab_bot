@@ -95,9 +95,7 @@ def insert_breed_data(species, name, specifications=None):
 def insert_pet_data(user_id, breed_id, name, gender=None, birth_date=None, weight=None, personality=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO pet (user_id, breed_id, name, gender, birth_date, weight, personality) VALUES (%s, %s, %s, %s, %s, %s, %s);
-    """
+    SQL_Quary = "INSERT INTO pet (user_id, breed_id, name, gender, birth_date, weight, personality) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     cursor.execute(SQL_Quary, (user_id, breed_id, name, gender, birth_date, weight, personality))
     cursor.close()
     conn.commit()
@@ -184,6 +182,62 @@ def edit_reception_receipt_image_file_id(receipt_image_file_id, id):
     conn.commit()
     conn.close()
 
+def insert_result_data(reception_test_id, result_quantity=None, result_quality=None, analysis=None, conclusion=None):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "INSERT IGNORE INTO result (reception_test_id, result_quantity, result_quality, analysis, conclusion) VALUES (%s, %s, %s, %s, %s);"
+    cursor.execute(SQL_Quary, (reception_test_id, result_quantity, result_quality, analysis, conclusion))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_result_date(result_date, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE result SET date=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (result_date, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_result_quantity(result_quantity, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE result SET result_quantity=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (result_quantity, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_result_analysis(analysis, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE result SET analysis=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (analysis, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_result_quality(result_quality, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE result SET result_quality=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (result_quality, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_result_conclusion(conclusion, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE result SET conclusion=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (conclusion, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+
+
 
 
 
@@ -197,15 +251,5 @@ def inesrt_payment_data(user_id, ammount):
     conn.close()
 
 
-def insert_result_data(reception_test_id, result_quantity=None, result_quality=None, analysis=None, conclusion=None):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = """
-    INSERT INTO result (reception_test_id, result_quantity, result_quality, analysis, conclusion) VALUES (%s, %s, %s, %s, %s)
-    """
-    cursor.execute(SQL_Quary, (reception_test_id, result_quantity, result_quality, analysis, conclusion))
-    cursor.close()
-    conn.commit()
-    conn.close()
 
 

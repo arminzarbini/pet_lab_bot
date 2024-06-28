@@ -161,7 +161,8 @@ def create_result_table():
 	analysis ENUM('high','low','normal'),
 	conclusion TEXT,
 	PRIMARY KEY (id),
-	FOREIGN KEY (reception_test_id) REFERENCES reception_test(id)
+	FOREIGN KEY (reception_test_id) REFERENCES reception_test(id),
+    UNIQUE (reception_test_id)
     );
     """
     cursor.execute(SQL_Quary)

@@ -163,7 +163,7 @@ def show_request(): #return reception data without code as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT reception.id, pet.name, user.username, reception.request_date
+    SELECT reception.id, pet.name, user.username, reception.code, reception.request_date
     FROM reception
     INNER JOIN pet
     ON reception.pet_id=pet.id
@@ -197,11 +197,11 @@ def show_reception(): #return reception data with code as list
     conn.close()
     return result
 
-def show_reception_test(reception_id): #return test item as list
+def show_reception_test(reception_id): #return reception_test item as dictionary
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT test.parameter
+    SELECT reception_test.id, reception_test.test_id, test.parameter
     FROM reception_test
     INNER JOIN test
     ON reception_test.test_id=test.id
@@ -211,7 +211,7 @@ def show_reception_test(reception_id): #return test item as list
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [i['parameter'] for i in result]
+    return result
 
 def show_reception_data(id): #retrun reception data as dictionary
     conn = mysql.connector.connect(**db_config)
@@ -260,6 +260,16 @@ def show_reception_comment(id): #retrun reception comment
     conn.close()
     return result[0]['comment']
 
+def show_reception_answer_date(id): #retrun reception answer_date 
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT answer_date FROM reception WHERE id=%s;"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]['answer_date']
+
 def show_reception_receipt_image_file_id(id): #retrun receipt_image_file_id
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
@@ -298,3 +308,33 @@ def no_user_username(cid): #check exist username..return as true or fales #ok
     cursor.close()
     conn.close()
     return len(result)==0
+
+def show_result_data(reception_test_id): #return result item as dictionary
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, date as result_date, result_quantity, result_quality, analysis, conclusion FROM result WHERE reception_test_id=%s"
+    cursor.execute(SQL_Quary, (reception_test_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+
+def show_test_type_range(id): #return type and minimum_range and maximum range as dictionary
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT type, minimum_range, maximum_range FROM test WHERE id=%s"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+
+def show_result_user(reception_test_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT date, result_quantity, result_quality, analysis, conclusion FROM result WHERE reception_test_id=%s"
+    cursor.execute(SQL_Quary, (reception_test_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
