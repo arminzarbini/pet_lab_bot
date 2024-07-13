@@ -169,7 +169,6 @@ def create_result_table():
     cursor.close()
     conn.close()
 
-
 if __name__ == "__main__":
     create_database()
     create_user_table()
@@ -180,17 +179,3 @@ if __name__ == "__main__":
     create_reception_table()
     create_reception_test_table()
     create_result_table()
-
-
-def create_table():
-
-    SQL_Quary_payment = """
-    CREATE TABLE IF NOT EXISTS payment (
-    id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    ammount DECIMAL(10,2) NOT NULL,
-    date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    FOREIGN KEY (user_id) REFERENCES user(cid)
-    );
-    """

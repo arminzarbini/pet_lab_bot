@@ -238,18 +238,3 @@ def edit_result_conclusion(conclusion, id):
 
 
 
-
-
-
-def inesrt_payment_data(user_id, ammount):
-    conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost', database=db_name)
-    cursor = conn.cursor()
-    SQL_Quary = "INSERT INTO payment (user_id, ammount) VALUES (%s, %s);"
-    cursor.execute(SQL_Quary, (user_id, ammount))
-    cursor.close()
-    conn.commit()
-    conn.close()
-
-
-
-

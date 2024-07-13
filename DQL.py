@@ -52,7 +52,7 @@ def show_member_user(): #return member cid user as list
     conn.close()
     return [i['cid'] for i in result]
 
-def show_user_data(cid): #return username information as dictionary
+def show_user_data(cid): #return user information as dictionary
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT first_name, last_name, username, national_code, phone, address FROM user WHERE cid=%s;"
@@ -132,7 +132,7 @@ def show_test(): #return id and paramater and price as list
     conn.close()
     return result
 
-def show_reception_id(pet_id): #return last reception id as list
+def show_reception_id(pet_id): #return last reception id
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT id FROM reception WHERE pet_id=%s"
@@ -142,7 +142,7 @@ def show_reception_id(pet_id): #return last reception id as list
     conn.close()
     return [i['id'] for i in result][-1]
  
-def show_reception_price(reception_id): #calculate test of reception
+def show_reception_price(reception_id): #calculate tests price of reception
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
@@ -163,7 +163,7 @@ def show_request(): #return reception data without code as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT reception.id, pet.name, user.username, reception.code, reception.request_date
+    SELECT reception.id, pet.name, user.username, reception.request_date
     FROM reception
     INNER JOIN pet
     ON reception.pet_id=pet.id
@@ -280,7 +280,7 @@ def show_reception_receipt_image_file_id(id): #retrun receipt_image_file_id
     conn.close()
     return result[0]['receipt_image_file_id']
 
-def show_reception_request_user(cid): #retrun reception data and pet name as list
+def show_reception_user(cid): #retrun reception data and pet name as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
@@ -329,7 +329,7 @@ def show_test_type_range(id): #return type and minimum_range and maximum range a
     conn.close()
     return result[0]
 
-def show_result_user(reception_test_id):
+def show_result_user(reception_test_id): #return result data as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT date, result_quantity, result_quality, analysis, conclusion FROM result WHERE reception_test_id=%s"
@@ -338,3 +338,57 @@ def show_result_user(reception_test_id):
     cursor.close()
     conn.close()
     return result
+
+def show_all_user_data(): #return all cid and username as list
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT cid, username FROM user;"
+    cursor.execute(SQL_Quary)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+def show_user_all_pet_data(user_id): #return pet id and name as list
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, name FROM pet WHERE user_id=%s;"
+    cursor.execute(SQL_Quary, (user_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+def show_user_pet_data(id): #return pet data and breed data as dictionary
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = """
+    SELECT pet.name as pet_name, breed.name as breed_name, breed.specifications, pet.gender, pet.birth_date, pet.weight, pet.personality
+    FROM pet
+    INNER JOIN breed
+    ON pet.breed_id=breed.id
+    WHERE pet.id=%s;
+    """
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+
+def get_cid(username): #get cid with username
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT cid FROM user WHERE username=%s;"
+    cursor.execute(SQL_Quary, (username, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if len(result) == 0:
+        return False
+    else:
+        return result[0]['cid']
+
+
+
+
+
