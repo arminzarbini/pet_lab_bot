@@ -363,7 +363,7 @@ def callback_handler(call):
             pet_name = data.split('_')[-2]
             comment = show_reception_comment(reception_id)
             receipt_image = show_reception_receipt_image_file_id(reception_id)
-            total_price = show_reception_price(reception_id)
+            total_price = show_reception_total_price(reception_id)
             markup = request_edit_markup(reception_id)
             bot.edit_message_text(text_admin['generate_reception_code'],cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
@@ -412,6 +412,21 @@ def callback_handler(call):
             bot.answer_callback_query(call_id, '✅')
             bot.send_message(cid, text_admin['reception_answer_date_edit'])
             user_steps[cid] = 4
+        elif data.startswith('is_pay_edit') : #admin : edit is_pay with select pay or not pay
+            reception_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton(text_admin['not_pay'], callback_data=f"pay_0_{reception_id}"), InlineKeyboardButton(text_admin['pay'], callback_data=f"pay_1_{reception_id}"))
+            bot.send_message(cid, text_admin['reception_is_pay'], reply_markup=markup)
+        elif data.startswith('pay'): #admin : edit is_pay
+            reception_id = int(data.split('_')[-1])
+            is_pay = int(data.split('_')[-2])
+            edit_reception_is_pay(is_pay=is_pay, id=reception_id)
+            bot.send_message(cid, text_admin['reception_is_pay_success'])
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
         elif data.startswith('send_result'): #admin : select reception_test for create result
             reception_id = int(data.split('_')[-1])
             markup = send_result_markup(reception_id)
@@ -625,7 +640,8 @@ def callback_handler(call):
                 insert_reception_test_data(reception_id=reception_id, test_id=item)
             pet_reception[pet_id].clear()
             bot.send_message(cid, text_user['reception_request_success'])
-            total_price = show_reception_price(reception_id)
+            total_price = calculate_reception_price(reception_id)
+            edit_reception_total_price(total_price=total_price, id=reception_id)
             bot.send_message(cid, f"{text_user['total_price']} {total_price}{text_user['toman']}")
             try:
                 bot.delete_message(cid, mid)
@@ -644,7 +660,7 @@ def callback_handler(call):
             reception_id = int(data.split('_')[-1])
             comment = show_reception_comment(reception_id)
             answer_date = show_reception_answer_date(reception_id)
-            total_price = show_reception_price(reception_id)
+            total_price = show_reception_total_price(reception_id)
             markup = reception_receipt_markup(reception_id)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
             for item in show_reception_test(reception_id):
@@ -1107,30 +1123,25 @@ def create_test_handler(message):
                         bot.send_message(cid, text_admin['test_description_check'])
                     else:
                         test.update({key: description})
-        if test['minimum_range'] >= test['maximum_range']:
-            bot.send_message(cid, text_admin['minium_maximum_range'])
-            test_group_dict.update({'id': test['test_group_id']})
-            test.clear()
-            test.update({'test_group_id': test_group_dict['id']})
-            test_group_dict.clear()
-        elif text['maximum_range'] <= test['minimum_range']:
-            bot.send_message(cid, text_admin['maximum_minimum_range'])
-            test_group_dict.update({'id': test['test_group_id']})
-            test.clear()
-            test.update({'test_group_id': test_group_dict['id']})
-            test_group_dict.clear()
-        else:
-            if len(test) == 9:
-                markup = send_home()
-                insert_test_data(**test)
-                bot.send_message(cid, text_admin['create_test_success'].format(test['parameter']), reply_markup=markup)
-                test.clear()
-                user_steps[cid] = 0
-            else:
+        if isinstance(minimum_range, float) and isinstance(maximum_range, float):
+            if test['minimum_range'] >= test['maximum_range']: 
+                bot.send_message(cid, text_admin['minium_maximum_range'])
                 test_group_dict.update({'id': test['test_group_id']})
                 test.clear()
                 test.update({'test_group_id': test_group_dict['id']})
-                test_group_dict.clear()         
+                test_group_dict.clear()
+            else:
+                if len(test) == 9:
+                    markup = send_home()
+                    insert_test_data(**test)
+                    bot.send_message(cid, text_admin['create_test_success'].format(test['parameter']), reply_markup=markup)
+                    test.clear()
+                    user_steps[cid] = 0
+                else:
+                    test_group_dict.update({'id': test['test_group_id']})
+                    test.clear()
+                    test.update({'test_group_id': test_group_dict['id']})
+                    test_group_dict.clear()         
     else:
         unknown_message(message)
 
@@ -1638,7 +1649,8 @@ def reception_comment_handler(message):
                 insert_reception_test_data(reception_id=reception_id, test_id=item)
             pet_reception[pet_id].clear()
             bot.send_message(cid, text_user['reception_request_success'])
-            total_price = show_reception_price(reception_id)
+            total_price = calculate_reception_price(reception_id)
+            edit_reception_total_price(total_price=total_price, id=reception_id)
             bot.send_message(cid, f"{text_user['total_price']} {total_price}{text_user['toman']}")
             pet_id_dict.clear()
             user_steps[cid] = 0

@@ -119,6 +119,7 @@ def create_reception_table():
 	request_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 	reception_date DATETIME,
 	answer_date DATE,
+    total_price DECIMAL,
 	comment TINYTEXT,
     receipt_image_file_id VARCHAR(100),
 	is_pay TINYINT(1) DEFAULT 0,

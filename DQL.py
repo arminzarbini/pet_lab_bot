@@ -172,7 +172,7 @@ def show_reception_id(pet_id): #return last reception id
     conn.close()
     return [i['id'] for i in result][-1]
  
-def show_reception_price(reception_id): #calculate tests price of reception
+def calculate_reception_price(reception_id): #calculate tests price of reception
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
@@ -309,6 +309,16 @@ def show_reception_receipt_image_file_id(id): #retrun receipt_image_file_id
     cursor.close()
     conn.close()
     return result[0]['receipt_image_file_id']
+
+def show_reception_total_price(id): #return total price
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT total_price FROM reception WHERE id=%s;"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]['total_price']
 
 def show_reception_user(cid): #retrun reception data and pet name as list
     conn = mysql.connector.connect(**db_config)

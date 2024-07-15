@@ -281,6 +281,24 @@ def edit_reception_receipt_image_file_id(receipt_image_file_id, id):
     conn.commit()
     conn.close()
 
+def edit_reception_total_price(total_price, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE reception SET total_price=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (total_price, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_reception_is_pay(is_pay, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE reception SET is_pay=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (is_pay, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
 def insert_result_data(reception_test_id, result_quantity=None, result_quality=None, analysis=None, conclusion=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
