@@ -82,7 +82,7 @@ def check_breed_name(name): #check unique breed name..return as true or false
     conn.close()
     return len(result)!=0
 
-def show_breed_name(species): #return id and name as list
+def show_breed(species): #return breed id and name as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT id, name FROM breed WHERE species=%s;"
@@ -91,6 +91,16 @@ def show_breed_name(species): #return id and name as list
     cursor.close()
     conn.close()
     return result
+
+def show_breed_data(id): #return name and specifications as dictionary
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT name as breed_name, specifications from breed WHERE id=%s"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
     
 def show_pet(user_id): #return pet name of user as list
     conn = mysql.connector.connect(**db_config)

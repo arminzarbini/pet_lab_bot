@@ -229,10 +229,7 @@ def callback_handler(call):
             bot.answer_callback_query(call_id, '✅')
             markup = InlineKeyboardMarkup()
             for key,value in show_test_data(test_id).items():
-                if key == 'id':
-                    test_id = value
-                    continue
-                elif key == 'test_group_id':
+                if key == 'id' or key == 'test_group_id':
                     continue
                 elif value == None:
                     markup.add(InlineKeyboardButton(f"{text_admin[key]}", callback_data=f"{key}_edit_{test_id}"))
@@ -301,9 +298,6 @@ def callback_handler(call):
             test_id_dict.update({'id': test_id})
             bot.send_message(cid, text_admin['test_description'])
             user_steps[cid] = 2.7
-        
-
-
         elif data in species_enum: #admin : create breed with step 3
             breed.update({'species': data})
             bot.answer_callback_query(call_id, '✅')
@@ -329,6 +323,41 @@ def callback_handler(call):
                 bot.delete_message(cid, mid)
             except:
                 pass
+        elif data.startswith('edit_species_breed'): #admin : edit breed with select breed
+            species = data.split('_')[-1]
+            markup = InlineKeyboardMarkup()
+            for item in show_breed(species):
+                markup.add(InlineKeyboardButton(item['name'], callback_data=f"edit_breed_{item['id']}"))
+            bot.send_message(cid, text_admin['edit_breed'], reply_markup=markup)
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('edit_breed'): # admin : edit breed with select items
+            breed_id = int(data.split('_')[-1])
+            markup = InlineKeyboardMarkup()
+            for key,value in show_breed_data(breed_id).items():
+                if value == None:
+                    markup.add(InlineKeyboardButton(f"{text[key]}", callback_data=f"{key}_edit_{breed_id}"))
+                else:
+                    markup.add(InlineKeyboardButton(f"{text[key]} : {value}", callback_data=f"{key}_edit_{breed_id}"))
+            bot.send_message(cid, text_admin['breed_information'], reply_markup=markup)
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('breed_name_edit'): #admin : edit breed with step 3.2
+            breed_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            breed_id_dict.update({'breed_id': breed_id})
+            bot.send_message(cid, text_admin['breed_name'])
+            user_steps[cid] = 3.2
+        elif data.startswith('specifications_edit'): #admin : edit breed with step 3.3
+            breed_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            breed_id_dict.update({'breed_id': breed_id})
+            bot.send_message(cid, text_admin['breed_specifications'])
+            user_steps[cid] = 3.3
         elif data.startswith('request'): #admin : show request data
             reception_id = int(data.split('_')[-1])
             pet_name = data.split('_')[-2]
@@ -503,7 +532,7 @@ def callback_handler(call):
             user_steps[cid] = 10.6
         elif data in species_enum: #user : create pet with select breed
             markup = InlineKeyboardMarkup()
-            for item in show_breed_name(data):
+            for item in show_breed(data):
                 markup.add(InlineKeyboardButton(item['name'], callback_data=f"choose_breed_{item['id']}"))
             bot.edit_message_text(text_user['choose_breed'], cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
@@ -705,8 +734,9 @@ def home_command(message):
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'],)
         markup.add(buttons_admin['edit_test'], buttons_admin['edit_test_group'])
-        markup.add(buttons_admin['username_infomration'], buttons_admin['create_breed'])
+        markup.add(buttons_admin['edit_breed'], buttons_admin['create_breed'])
         markup.add(buttons_admin['reception_manage'], buttons_admin['request_manage'])
+        markup.add(buttons_admin['username_infomration'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
     else:
@@ -878,13 +908,25 @@ def edit_test_handler_button(message):
         unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['create_breed']) #admin : create breed with select sepecies enum
+@bot.message_handler(func=lambda message:message.text==buttons_admin['create_breed']) #admin : create breed with select species enum
 def create_breed_handler(message):
     cid = message.chat.id
     if cid in admins:
         markup = InlineKeyboardMarkup()
         for item in species_enum:
             markup.add(InlineKeyboardButton(text[item], callback_data=item))
+        bot.send_message(cid, text['choose_species'], reply_markup=markup)
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:message.text==buttons_admin['edit_breed']) #admin : edit breed with select species enum
+def edit_breed_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        markup = InlineKeyboardMarkup()
+        for item in species_enum:
+            markup.add(InlineKeyboardButton(text[item], callback_data=f"edit_species_breed_{item}"))
         bot.send_message(cid, text['choose_species'], reply_markup=markup)
     else:
         unknown_message(message)
@@ -1065,17 +1107,30 @@ def create_test_handler(message):
                         bot.send_message(cid, text_admin['test_description_check'])
                     else:
                         test.update({key: description})
-        if len(test) == 9:
-            markup = send_home()
-            insert_test_data(**test)
-            bot.send_message(cid, text_admin['create_test_success'].format(test['parameter']), reply_markup=markup)
-            test.clear()
-            user_steps[cid] = 0
-        else:
+        if test['minimum_range'] >= test['maximum_range']:
+            bot.send_message(cid, text_admin['minium_maximum_range'])
             test_group_dict.update({'id': test['test_group_id']})
             test.clear()
             test.update({'test_group_id': test_group_dict['id']})
-            test_group_dict.clear()         
+            test_group_dict.clear()
+        elif text['maximum_range'] <= test['minimum_range']:
+            bot.send_message(cid, text_admin['maximum_minimum_range'])
+            test_group_dict.update({'id': test['test_group_id']})
+            test.clear()
+            test.update({'test_group_id': test_group_dict['id']})
+            test_group_dict.clear()
+        else:
+            if len(test) == 9:
+                markup = send_home()
+                insert_test_data(**test)
+                bot.send_message(cid, text_admin['create_test_success'].format(test['parameter']), reply_markup=markup)
+                test.clear()
+                user_steps[cid] = 0
+            else:
+                test_group_dict.update({'id': test['test_group_id']})
+                test.clear()
+                test.update({'test_group_id': test_group_dict['id']})
+                test_group_dict.clear()         
     else:
         unknown_message(message)
 
@@ -1141,10 +1196,15 @@ def edit_test_minimum_range_handler(message):
             if len(str(minimum_range).split('.')[0]) > 5 or len(str(minimum_range).split('.')[-1]) > 3 :
                 bot.send_message(cid, text_admin['test_minimum_range_check'])
             else:
-                edit_test_minimum_range(minimum_range=minimum_range, id=test_id_dict['id'])
-                bot.send_message(cid, text_admin['test_minimum_range_success'])
-                test_id_dict.clear()
-                user_steps[cid] = 0
+                maximum_range = show_test_type_range(test_id_dict['id'])['maximum_range']
+                if maximum_range != None:
+                    if minimum_range >= maximum_range:
+                        bot.send_message(cid, text_admin['minium_maximum_range'])
+                    else:
+                        edit_test_minimum_range(minimum_range=minimum_range, id=test_id_dict['id'])
+                        bot.send_message(cid, text_admin['test_minimum_range_success'])
+                        test_id_dict.clear()
+                        user_steps[cid] = 0
     else:
         unknown_message(message)
             
@@ -1162,10 +1222,15 @@ def edit_test_maximum_range_handler(message):
             if len(str(maximum_range).split('.')[0]) > 5 or len(str(maximum_range).split('.')[-1]) > 3 :
                 bot.send_message(cid, text_admin['test_maximum_range_check'])
             else:
-                edit_test_maximum_range(maximum_range=maximum_range, id=test_id_dict['id'])
-                bot.send_message(cid, text_admin['test_maximum_range_success'])
-                test_id_dict.clear()
-                user_steps[cid] = 0
+                minimum_range = show_test_type_range(test_id_dict['id'])['minimum_range']
+                if minimum_range != None:
+                    if maximum_range <= minimum_range:
+                        bot.send_message(cid, text_admin['maximum_minimum_range'])
+                    else:
+                        edit_test_maximum_range(maximum_range=maximum_range, id=test_id_dict['id'])
+                        bot.send_message(cid, text_admin['test_maximum_range_success'])
+                        test_id_dict.clear()
+                        user_steps[cid] = 0
     else:
         unknown_message(message)
 
@@ -1234,6 +1299,40 @@ def breed_specifications_handler(message):
             insert_breed_data(species=breed['species'], name=breed['name'], specifications=breed['specifications'])
             bot.send_message(cid, text_admin['create_breed_success'].format(breed['name']), reply_markup=markup)
             breed.clear()
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3.2) # admin : edit breed name
+def edit_breed_name_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        name = message.text
+        if check_breed_name(name):
+            bot.send_message(cid, text_admin['breed_name_unique'])
+        elif len(name) > 45:
+            bot.send_message(cid,text_admin['breed_name_check'])
+        else:
+            edit_breed_name(name=name, id=breed_id_dict['breed_id'])
+            bot.send_message(cid, text_admin['edit_breed_name'])
+            breed_id_dict.clear()
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3.3) # admin : edit breed specifications
+def edit_breed_specifications_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        specifications = message.text
+        if len(specifications) > 255:
+            bot.send_message(cid, text_admin['breed_specifications_check'])
+        else:
+            edit_breed_specifications(specifications=specifications, id=breed_id_dict['breed_id'])
+            bot.send_message(cid, text_admin['edit_breed_specifications'])
+            breed_id_dict.clear()
             user_steps[cid] = 0
     else:
         unknown_message(message)

@@ -173,6 +173,24 @@ def insert_breed_data(species, name, specifications=None):
     conn.commit()
     conn.close()
 
+def edit_breed_name(name, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE breed SET name=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (name, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_breed_specifications(specifications, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE breed SET specifications=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (specifications, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
 def insert_pet_data(user_id, breed_id, name, gender=None, birth_date=None, weight=None, personality=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
