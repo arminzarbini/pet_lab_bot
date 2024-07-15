@@ -11,11 +11,92 @@ def insert_test_group_data(name):
     conn.commit()
     conn.close()
 
+def edit_test_group_name(name, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test_group SET name=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (name, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
 def insert_test_data(test_group_id, parameter, type, price, unit=None, minimum_range=None, maximum_range=None, analyze_date=None, description=None):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     SQL_Quary = "INSERT INTO test (test_group_id, parameter, type, price, unit, minimum_range, maximum_range, analyze_date, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
     cursor.execute(SQL_Quary, (test_group_id, parameter, type, price, unit, minimum_range, maximum_range, analyze_date, description))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_parameter(parameter, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET parameter=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (parameter, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_type(type, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET type=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (type, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_price(price, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET price=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (price, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_unit(unit, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET unit=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (unit, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_minimum_range(minimum_range, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET minimum_range=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (minimum_range, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_maximum_range(maximum_range, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET maximum_range=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (maximum_range, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_analyze_date(analyze_date, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET analyze_date=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (analyze_date, id))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+def edit_test_description(description, id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    SQL_Quary = "UPDATE test SET description=%s WHERE id=%s;"
+    cursor.execute(SQL_Quary, (description, id))
     cursor.close()
     conn.commit()
     conn.close()

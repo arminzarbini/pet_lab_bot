@@ -122,6 +122,26 @@ def show_pet_id(user_id): #return id(key) and name(value) as dictionary
     conn.close()
     return {i['id']:i['name'] for i in result}
 
+def show_test_test_group(test_group_id): #return test id and parameter as list
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT id, parameter FROM test WHERE test_group_id=%s;"
+    cursor.execute(SQL_Quary, (test_group_id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+def show_test_data(id): #return test data as dictionary
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    SQL_Quary = "SELECT * FROM test WHERE id=%s"
+    cursor.execute(SQL_Quary, (id, ))
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result[0]
+
 def show_test(): #return id and paramater and price as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)

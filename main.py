@@ -27,6 +27,7 @@ test_id_dict = dict() #{id : id}
 species_enum = ['cat', 'dog', 'bird', 'rabbit', 'rat', 'other'] #ENUM for species in breed table
 gender_enum = ['male', 'female'] #ENUM for gender in pet table
 quality_enum = ['negative', 'positive'] #ENUM for result quality in result table
+type_enum = ['quantity', 'quality']
 
 def get_member_user(): #return member user
     member_user = show_member_user()
@@ -191,7 +192,17 @@ def callback_handler(call):
     call_id = call.id
     data = call.data
     if cid in admins:
-        if data.startswith('test_group'):  #admin : create test with step 2
+        if data.startswith('edit_group_test'): #admin : edit test group name with step 1.1
+            test_group_id = int(data.split('_')[-1])
+            test_group_dict.update({'id': test_group_id})
+            bot.answer_callback_query(call_id, '✅')
+            bot.send_message(cid, text_admin['test_group_name'])
+            user_steps[cid] = 1.1
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('test_group'):  #admin : create test with step 2
             test_group_id = int(data.split('_')[-1])
             test.update({'test_group_id': test_group_id})
             bot.answer_callback_query(call_id, '✅')
@@ -202,6 +213,97 @@ def callback_handler(call):
                 bot.delete_message(cid, mid)
             except:
                 pass
+        elif data.startswith('edit_select_test_group_test'): #admin : edit test with select parameter
+            test_group_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            markup = InlineKeyboardMarkup()
+            for item in show_test_test_group(test_group_id):
+                markup.add(InlineKeyboardButton(item['parameter'], callback_data=f"edit_test_{item['id']}"))
+            bot.send_message(cid, text_admin['edit_test'], reply_markup=markup)
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('edit_test'): #admin : edit test with select items
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            markup = InlineKeyboardMarkup()
+            for key,value in show_test_data(test_id).items():
+                if key == 'id':
+                    test_id = value
+                    continue
+                elif key == 'test_group_id':
+                    continue
+                elif value == None:
+                    markup.add(InlineKeyboardButton(f"{text_admin[key]}", callback_data=f"{key}_edit_{test_id}"))
+                else:
+                    markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value}", callback_data=f"{key}_edit_{test_id}"))
+            bot.send_message(cid, text_admin['test_information'], reply_markup=markup)
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('parameter_edit'): # admin : edit test parameter with step 2.1
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_parameter'])
+            user_steps[cid] = 2.1
+        elif data.startswith('type_edit'): #admin : edit test type with select quality or quantity
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            markup = InlineKeyboardMarkup()
+            for item in type_enum:
+                markup.add(InlineKeyboardButton(text_admin[item], callback_data=f"{item}_{test_id}"))
+            bot.send_message(cid, text_admin['test_type'], reply_markup=markup)
+        elif data.startswith('quantity') or data.startswith('quality'): #admin : edit test type
+            test_id = int(data.split('_')[-1])
+            type = data.split('_')[0]
+            edit_test_type(type=type, id=test_id)
+            bot.send_message(cid, text_admin['test_type_success'])
+            try:
+                bot.delete_message(cid, mid)
+            except:
+                pass
+        elif data.startswith('price_edit'): #admin : edit test type with step 2.2
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_price'])
+            user_steps[cid] = 2.2
+        elif data.startswith('unit_edit'): #admin : edit test unit with step 2.3
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_unit'])
+            user_steps[cid] = 2.3
+        elif data.startswith('minimum_range_edit'): #admin : edit test minimum_range with step 2.4
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_minimum_range'])
+            user_steps[cid] = 2.4
+        elif data.startswith('maximum_range_edit'): #admin : edit test maximum_range with step 2.5
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_maximum_range'])
+            user_steps[cid] = 2.5
+        elif data.startswith('analyze_date_edit'): #admin : edit test analyze_date with step 2.6
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_analyze_date'])
+            user_steps[cid] = 2.6
+        elif data.startswith('description_edit'): #admin : edit test description with step 2.7
+            test_id = int(data.split('_')[-1])
+            bot.answer_callback_query(call_id, '✅')
+            test_id_dict.update({'id': test_id})
+            bot.send_message(cid, text_admin['test_description'])
+            user_steps[cid] = 2.7
+        
+
+
         elif data in species_enum: #admin : create breed with step 3
             breed.update({'species': data})
             bot.answer_callback_query(call_id, '✅')
@@ -602,6 +704,7 @@ def home_command(message):
     if cid in admins:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'],)
+        markup.add(buttons_admin['edit_test'], buttons_admin['edit_test_group'])
         markup.add(buttons_admin['username_infomration'], buttons_admin['create_breed'])
         markup.add(buttons_admin['reception_manage'], buttons_admin['request_manage'])
         bot.send_message(cid, text['home'], reply_markup=markup)
@@ -726,7 +829,7 @@ def recieve_result_handler(message):
         
 
 @bot.message_handler(func=lambda message: message.text==buttons_admin['create_test_group']) #admin : create test group with step 1 
-def create_test_group_handler(message):
+def create_test_group_handler_button(message):
     cid = message.chat.id
     if cid in admins:
         bot.send_message(cid, text_admin['test_group_name'])
@@ -735,8 +838,20 @@ def create_test_group_handler(message):
         unknown_message(message)
 
 
-@bot.message_handler(func=lambda message: message.text==buttons_admin['create_test']) #admin : create test group with select test group name
-def create_test_handler(message):
+@bot.message_handler(func=lambda message:message.text==buttons_admin['edit_test_group']) #admin : edit test group with select test group name
+def edit_test_group_handler_button(message):
+    cid = message.chat.id
+    if cid in admins:
+        markup = InlineKeyboardMarkup()
+        for item in show_test_group():
+            markup.add(InlineKeyboardButton(item['name'], callback_data=f"edit_group_test_{item['id']}"))
+        bot.send_message(cid, text_admin['test_group_edit'], reply_markup=markup)
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:message.text==buttons_admin['create_test']) #admin : create test group with select test group name
+def create_test_handler_button(message):
     cid = message.chat.id
     if cid in admins:
         if check_test_group_exists(): #check for test group exist
@@ -748,6 +863,18 @@ def create_test_handler(message):
                 markup.add(InlineKeyboardButton(item['name'], callback_data=f"test_group_{item['id']}"))
             bot.send_message(cid, text_admin['choose_test_group'], reply_markup=markup)
     else :
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:message.text==buttons_admin['edit_test']) #admin : edit test with select test group name
+def edit_test_handler_button(message):
+    cid = message.chat.id
+    if cid in admins:
+        markup = InlineKeyboardMarkup()
+        for item in show_test_group():
+            markup.add(InlineKeyboardButton(item['name'], callback_data=f"edit_select_test_group_test_{item['id']}"))
+        bot.send_message(cid, text_admin['edit_test_test_group'], reply_markup=markup)
+    else:
         unknown_message(message)
 
 
@@ -806,6 +933,25 @@ def create_test_group_handler(message):
             markup = send_home()
             insert_test_group_data(name=name)
             bot.send_message(cid, text_admin['create_test_group_success'].format(name), reply_markup=markup)
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==1.1) #admin : edit test group
+def edit_test_group_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        name = message.text
+        if check_test_group_name(name):
+            bot.send_message(cid, text_admin['test_group_name_unique'])
+        elif len(name) > 45:
+            bot.send_message(cid, text_admin['test_group_name_check'])
+        else:
+            markup = send_home()
+            edit_test_group_name(name=name, id=test_group_dict['id'])
+            bot.send_message(cid, text_admin['edit_test_group_success'], reply_markup=markup)
+            test_group_dict.clear()
             user_steps[cid] = 0
     else:
         unknown_message(message)
@@ -934,6 +1080,128 @@ def create_test_handler(message):
         unknown_message(message)
 
 
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.1) #admin : edit test parameter
+def edit_test_parameter_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        parameter = message.text
+        if check_test_parameter(parameter):
+            bot.send_message(cid, text_admin['test_parameter_unique'])
+        elif len(parameter) > 45:
+            bot.send_message(cid, text_admin['test_parameter_check'])
+        else:
+            edit_test_parameter(parameter=parameter, id=test_id_dict['id'])
+            bot.send_message(cid, text_admin['test_parameter_success'])
+            test_id_dict.clear()
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.2) #admin : edit test price
+def edit_test_price_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        price = message.text
+        if price.isnumeric() == True and len(price) <= 10:
+            edit_test_price(price=price, id=test_id_dict['id'])
+            bot.send_message(cid, text_admin['test_price_success'])
+            test_id_dict.clear()
+            user_steps[cid] = 0
+        else:
+            bot.send_message(cid, text_admin['test_price_check'])    
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.3) #admin : edit test unit
+def edit_test_unit_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        unit = message.text
+        if len(unit) > 10:
+            bot.send_message(cid, text_admin['test_unit_check'])
+        else: 
+            edit_test_unit(unit=unit, id=test_id_dict['id'])
+            bot.send_message(cid, text_admin['test_unit_success'])
+            test_id_dict.clear()
+            user_steps[cid] = 0
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.4) #admin : edit test minimum_range
+def edit_test_minimum_range_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        minimum_range = message.text
+        try:
+            minimum_range = float(minimum_range)
+        except:
+            bot.send_message(cid, text_admin['test_minimum_range_check'])
+        else:
+            if len(str(minimum_range).split('.')[0]) > 5 or len(str(minimum_range).split('.')[-1]) > 3 :
+                bot.send_message(cid, text_admin['test_minimum_range_check'])
+            else:
+                edit_test_minimum_range(minimum_range=minimum_range, id=test_id_dict['id'])
+                bot.send_message(cid, text_admin['test_minimum_range_success'])
+                test_id_dict.clear()
+                user_steps[cid] = 0
+    else:
+        unknown_message(message)
+            
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.5) #admin : edit test maximum_range
+def edit_test_maximum_range_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        maximum_range = message.text
+        try:
+            maximum_range = float(maximum_range)
+        except:
+            bot.send_message(cid, text_admin['test_maximum_range_check'])
+        else:
+            if len(str(maximum_range).split('.')[0]) > 5 or len(str(maximum_range).split('.')[-1]) > 3 :
+                bot.send_message(cid, text_admin['test_maximum_range_check'])
+            else:
+                edit_test_maximum_range(maximum_range=maximum_range, id=test_id_dict['id'])
+                bot.send_message(cid, text_admin['test_maximum_range_success'])
+                test_id_dict.clear()
+                user_steps[cid] = 0
+    else:
+        unknown_message(message)
+
+
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.6) #admin : edit test analyze_date
+def edit_test_analyze_date_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        analyze_date = message.text
+        if analyze_date.isnumeric() == True and 1 <= int(analyze_date) <= 90:
+            edit_test_analyze_date(analyze_date=analyze_date, id=test_id_dict['id'])
+            bot.send_message(cid, text_admin['test_analyze_date_success'])
+            test_id_dict.clear()
+            user_steps[cid] = 0
+        else:
+            bot.send_message(cid, text_admin['test_analyze_date_check'])
+    else:
+        unknown_message(message)
+    
+            
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==2.7) #admin : edit test description
+def edit_test_description_handler(message):
+    cid = message.chat.id
+    if cid in admins:
+        description = message.text
+        if len(description) > 255:
+            bot.send_message(cid, text_admin['test_description_check'])
+        else:
+            edit_test_description(description=description, id=test_id_dict['id'])
+            bot.send_message(cid, text_admin['test_description_success'])
+            test_id_dict.clear()
+            user_steps[cid] = 0
+    else:
+        unknown_message(message)
+    
+                
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==3) #admin : create breed name
 def breed_handler(message):
     cid = message.chat.id
