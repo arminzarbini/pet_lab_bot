@@ -1,7 +1,6 @@
 import mysql.connector
 from config import *
 
-
 def insert_test_group_data(name):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()

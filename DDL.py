@@ -1,7 +1,6 @@
 import mysql.connector
 from config import *
 
-
 def create_database():
     conn = mysql.connector.connect(user=db_user, password=db_password, host='localhost')
     cursor = conn.cursor()
@@ -97,7 +96,7 @@ def create_test_table():
     unit VARCHAR(10),
     minimum_range DECIMAL(8,3),
 	maximum_range DECIMAL(8,3),
-    analyze_date tinyint(30),
+    analyze_date tinyint,
     description TINYTEXT,
     PRIMARY KEY (id),
     FOREIGN KEY (test_group_id) REFERENCES test_group(id),

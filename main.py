@@ -6,13 +6,11 @@ from config import *
 from text import *
 import re
 import jdatetime
-from datetime import datetime
 import random
 import string
 import datetime
 
 bot = telebot.TeleBot(BOT_TOKEN, num_threads=10)
-hideboard = ReplyKeyboardRemove()
 users = list() #[cid, ...]
 user_steps = dict() # {cid, step,...}
 test_group_dict = dict() #{id : id}
@@ -83,9 +81,9 @@ def reception_test_markup(pet_id): #generate markup test item for choose or remo
     markup = InlineKeyboardMarkup()
     for item in show_test():
         if item['id'] in pet_reception[pet_id]:
-            markup.add(InlineKeyboardButton(f"🧪{text_user['parameter']}:{item['parameter']}-{text_user['price']}:{item['price']}{text_user['toman']}🧪", callback_data=f"remove_test_{item['id']}_{pet_id}"))
+            markup.add(InlineKeyboardButton(f"🧪{text_user['test_group']}:{item['name']}-{text_user['parameter']}:{item['parameter']}-{text_user['price']}:{item['price']}{text_user['toman']}🧪", callback_data=f"remove_test_{item['id']}_{pet_id}"))
         else:
-            markup.add(InlineKeyboardButton(f"{text_user['parameter']}:{item['parameter']}-{text_user['price']}:{item['price']}{text_user['toman']}", callback_data=f"choose_test_{item['id']}_{pet_id}"))
+            markup.add(InlineKeyboardButton(f"{text_user['test_group']}:{item['name']}-{text_user['parameter']}:{item['parameter']}-{text_user['price']}:{item['price']}{text_user['toman']}", callback_data=f"choose_test_{item['id']}_{pet_id}"))
     markup.add(InlineKeyboardButton(text_user['order'], callback_data=f"order_{pet_id}"))
     markup.add(InlineKeyboardButton(text['return'], callback_data='return_pet_markup'))
     return markup
@@ -130,7 +128,7 @@ def request_markup(): #generate markup reception without code
 def reception_markup(): #generate markup reception with code
     markup = InlineKeyboardMarkup()
     for item in show_reception():
-        markup.add(InlineKeyboardButton(f"{item['code']}-{item['name']}-{item['username']}", callback_data=f"reception_{item['name']}_{item['id']}"))
+        markup.add(InlineKeyboardButton(f"{item['code']}-{item['name']}-{item['username']}", callback_data=f"reception_{item['id']}"))
     return markup
 
 def request_edit_markup(reception_id): #generate markup request manage
@@ -147,11 +145,16 @@ def reception_edit_markup(reception_id): #generate markup reception manage
     for key,value in show_reception_data(reception_id).items():
         if key == 'code':
             continue
+        elif value == None:
+            markup.add(InlineKeyboardButton(f"{text_admin[key]}", callback_data=f"{key}_edit_{reception_id}"))
         elif isinstance(value, datetime.date):
             persian_date_str = show_persian_date(value)
             markup.add(InlineKeyboardButton(f"{text_admin[key]} : {persian_date_str}", callback_data=f"{key}_edit_{reception_id}"))
-        elif value == None:
-            markup.add(InlineKeyboardButton(f"{text_admin[key]}", callback_data=f"{key}_edit_{reception_id}"))
+        elif key == 'is_pay':
+            if value == 0:
+                markup.add(InlineKeyboardButton(f"{text_admin[key]} : {text_admin['not_pay']}", callback_data=f"{key}_edit_{reception_id}"))
+            elif value == 1:
+                markup.add(InlineKeyboardButton(f"{text_admin[key]} : {text_admin['pay']}", callback_data=f"{key}_edit_{reception_id}"))
         else:
             markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value}", callback_data=f"{key}_edit_{reception_id}"))
     markup.add(InlineKeyboardButton(text_admin['send_result'], callback_data=f"send_result_{reception_id}"))
@@ -233,6 +236,12 @@ def callback_handler(call):
                     continue
                 elif value == None:
                     markup.add(InlineKeyboardButton(f"{text_admin[key]}", callback_data=f"{key}_edit_{test_id}"))
+                elif key == 'type':
+                    markup.add(InlineKeyboardButton(f"{text_admin[key]} : {text_admin[value]}", callback_data=f"{key}_edit_{test_id}"))
+                elif key == 'price':
+                    markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value} {text_admin['toman']}", callback_data=f"{key}_edit_{test_id}"))
+                elif key == 'analyze_date':
+                    markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value} {text_admin['day']}", callback_data=f"{key}_edit_{test_id}"))
                 else:
                     markup.add(InlineKeyboardButton(f"{text_admin[key]} : {value}", callback_data=f"{key}_edit_{test_id}"))
             bot.send_message(cid, text_admin['test_information'], reply_markup=markup)
@@ -308,8 +317,8 @@ def callback_handler(call):
             except:
                 pass
         elif data == 'no_specifications_breed':  #admin : create breed without specifications
-            insert_breed_data(species=breed['species'], name=breed['name'], specifications=None)
             markup = send_home()
+            insert_breed_data(species=breed['species'], name=breed['name'], specifications=None)
             bot.send_message(cid, text_admin['create_breed_success'].format(breed['name']), reply_markup=markup)
             breed.clear()
             try:
@@ -361,9 +370,9 @@ def callback_handler(call):
         elif data.startswith('request'): #admin : show request data
             reception_id = int(data.split('_')[-1])
             pet_name = data.split('_')[-2]
-            comment = show_reception_comment(reception_id)
-            receipt_image = show_reception_receipt_image_file_id(reception_id)
-            total_price = show_reception_total_price(reception_id)
+            comment = show_reception_info(reception_id)['comment']
+            receipt_image = show_reception_info(reception_id)['receipt_image_file_id']
+            total_price = show_reception_info(reception_id)['total_price']
             markup = request_edit_markup(reception_id)
             bot.edit_message_text(text_admin['generate_reception_code'],cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
@@ -384,7 +393,6 @@ def callback_handler(call):
                 pass
         elif data.startswith('reception'): #admin : show reception data
             reception_id = int(data.split('_')[-1])
-            pet_name = data.split('_')[-2]
             markup = reception_edit_markup(reception_id)
             bot.edit_message_text(text_admin['reception_edit'],cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
@@ -472,8 +480,7 @@ def callback_handler(call):
             markup = InlineKeyboardMarkup()
             for item in quality_enum:
                 markup.add(InlineKeyboardButton(text_admin[item], callback_data=f"{item}_{result_id}"))
-            bot.edit_message_text(text_admin['result_quality_edit'], cid, mid)
-            bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
+            bot.send_message(cid, text_admin['result_quality_edit'], reply_markup=markup)
         elif data.startswith('positive') or data.startswith('negative'): #admin : edit result quality
             result_id = int(data.split('_')[-1])
             result_quality = data.split('_')[0]
@@ -507,6 +514,8 @@ def callback_handler(call):
                 elif isinstance(value, datetime.date):
                     persian_date_str = show_persian_date(value)
                     bot.send_message(cid, f"{text[key]} : {persian_date_str}")
+                elif key == 'species' or key == 'gender':
+                    bot.send_message(cid, f"{text[key]} : {text[value]}")
                 else:
                     bot.send_message(cid, f"{text[key]} : {value}")
             try:
@@ -632,7 +641,7 @@ def callback_handler(call):
             markup = reception_pet_markup(cid)
             bot.edit_message_text(text_user['choose_pet'], cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
-        elif data.startswith('no_reception_comment'): #user : create reception with no comment and reception_test
+        elif data.startswith('no_reception_comment'): #user : create reception with no comment and create reception_test
             pet_id = int(data.split('_')[-1])   
             insert_reception_data(pet_id=pet_id)        
             reception_id = show_reception_id(pet_id)
@@ -658,9 +667,9 @@ def callback_handler(call):
             user_steps[cid] = 12
         elif data.startswith('reception'): #user : show request or reception data and send receipt
             reception_id = int(data.split('_')[-1])
-            comment = show_reception_comment(reception_id)
-            answer_date = show_reception_answer_date(reception_id)
-            total_price = show_reception_total_price(reception_id)
+            comment = show_reception_info(reception_id)['comment']
+            answer_date = show_reception_info(reception_id)['answer_date']
+            total_price = show_reception_info(reception_id)['total_price']
             markup = reception_receipt_markup(reception_id)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
             for item in show_reception_test(reception_id):
@@ -700,15 +709,19 @@ def callback_handler(call):
             else:
                 for item in show_result_user(reception_test_id):
                     result_date_str = show_persian_datetime(item['date'])
+                    if show_test_type_range(test_id)['unit'] == None:
+                        unit = '...'
+                    else:
+                        unit = show_test_type_range(test_id)['unit']
                     if test_type == 'quality':
                         if item['result_quality'] == None:
                             bot.send_message(cid, text_user['result_not_ready'])
                             break
                         else:
                             if item['conclusion'] != None:
-                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['result_quality']} : {item['result_quality']}\n{text_user['result_conclusion']} : {item['conclusion']}")
+                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['unit']} : {unit}\n{text_user['result_quality']} : {item['result_quality']}\n{text_user['result_conclusion']} : {item['conclusion']}")
                             else:
-                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['result_quality']} : {item['result_quality']}")
+                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['unit']} : {unit}\n{text_user['result_quality']} : {item['result_quality']}")
                     elif test_type == 'quantity':
                         if item['result_quantity'] == None:
                             bot.send_message(cid, text_user['result_not_ready'])
@@ -717,9 +730,9 @@ def callback_handler(call):
                             minimum_range = show_test_type_range(test_id)['minimum_range']
                             maximum_range = show_test_type_range(test_id)['maximum_range']
                             if item['conclusion'] != None:
-                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['minimum_range']} : {minimum_range}\n{text_user['maximum_range']} : {maximum_range}\n{text_user['result_quantity']} : {item['result_quantity']}\n{text_user['result_analysis']} : {item['analysis']}\n{text_user['result_conclusion']} : {item['conclusion']}")
+                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['unit']} : {unit}\n{text_user['minimum_range']} : {minimum_range}\n{text_user['maximum_range']} : {maximum_range}\n{text_user['result_quantity']} : {item['result_quantity']}\n{text_user['result_analysis']} : {item['analysis']}\n{text_user['result_conclusion']} : {item['conclusion']}")
                             else:
-                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['minimum_range']} : {minimum_range}\n{text_user['maximum_range']} : {maximum_range}\n{text_user['result_quantity']} : {item['result_quantity']}\n{text_user['result_analysis']} : {item['analysis']}")
+                                bot.send_message(cid, f"{text_user['result_date']} : {result_date_str}\n{text_user['unit']} : {unit}\n{text_user['minimum_range']} : {minimum_range}\n{text_user['maximum_range']} : {maximum_range}\n{text_user['result_quantity']} : {item['result_quantity']}\n{text_user['result_analysis']} : {item['analysis']}")
                            
 
 @bot.message_handler(commands=['start'])
@@ -748,7 +761,7 @@ def home_command(message):
     cid = message.chat.id
     if cid in admins:
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'],)
+        markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'])
         markup.add(buttons_admin['edit_test'], buttons_admin['edit_test_group'])
         markup.add(buttons_admin['edit_breed'], buttons_admin['create_breed'])
         markup.add(buttons_admin['reception_manage'], buttons_admin['request_manage'])
@@ -896,7 +909,7 @@ def edit_test_group_handler_button(message):
         unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['create_test']) #admin : create test group with select test group name
+@bot.message_handler(func=lambda message:message.text==buttons_admin['create_test']) #admin : create test with select test group name
 def create_test_handler_button(message):
     cid = message.chat.id
     if cid in admins:
@@ -948,7 +961,7 @@ def edit_breed_handler(message):
         unknown_message(message)
 
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['request_manage']) #admin : check and confirm requests
+@bot.message_handler(func=lambda message:message.text==buttons_admin['request_manage']) #admin : manage reception requests
 def request_manage_handler(message):
     cid = message.chat.id
     if cid in admins:
@@ -958,7 +971,7 @@ def request_manage_handler(message):
         unknown_message(message)
     
 
-@bot.message_handler(func=lambda message:message.text==buttons_admin['reception_manage']) #admin : manage reception
+@bot.message_handler(func=lambda message:message.text==buttons_admin['reception_manage']) #admin : manage receptions
 def reception_manage_handler(message):
     cid = message.chat.id
     if cid in admins:
@@ -1141,7 +1154,19 @@ def create_test_handler(message):
                     test_group_dict.update({'id': test['test_group_id']})
                     test.clear()
                     test.update({'test_group_id': test_group_dict['id']})
-                    test_group_dict.clear()         
+                    test_group_dict.clear()   
+        else:
+            if len(test) == 9:
+                markup = send_home()
+                insert_test_data(**test)
+                bot.send_message(cid, text_admin['create_test_success'].format(test['parameter']), reply_markup=markup)
+                test.clear()
+                user_steps[cid] = 0
+            else:
+                test_group_dict.update({'id': test['test_group_id']})
+                test.clear()
+                test.update({'test_group_id': test_group_dict['id']})
+                test_group_dict.clear()         
     else:
         unknown_message(message)
 
@@ -1156,8 +1181,9 @@ def edit_test_parameter_handler(message):
         elif len(parameter) > 45:
             bot.send_message(cid, text_admin['test_parameter_check'])
         else:
+            markup = send_home()
             edit_test_parameter(parameter=parameter, id=test_id_dict['id'])
-            bot.send_message(cid, text_admin['test_parameter_success'])
+            bot.send_message(cid, text_admin['test_parameter_success'], reply_markup=markup)
             test_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1170,8 +1196,9 @@ def edit_test_price_handler(message):
     if cid in admins:
         price = message.text
         if price.isnumeric() == True and len(price) <= 10:
+            markup = send_home()
             edit_test_price(price=price, id=test_id_dict['id'])
-            bot.send_message(cid, text_admin['test_price_success'])
+            bot.send_message(cid, text_admin['test_price_success'], reply_markup=markup)
             test_id_dict.clear()
             user_steps[cid] = 0
         else:
@@ -1187,9 +1214,10 @@ def edit_test_unit_handler(message):
         unit = message.text
         if len(unit) > 10:
             bot.send_message(cid, text_admin['test_unit_check'])
-        else: 
+        else:
+            markup = send_home()
             edit_test_unit(unit=unit, id=test_id_dict['id'])
-            bot.send_message(cid, text_admin['test_unit_success'])
+            bot.send_message(cid, text_admin['test_unit_success'], reply_markup=markup)
             test_id_dict.clear()
             user_steps[cid] = 0
 
@@ -1212,8 +1240,9 @@ def edit_test_minimum_range_handler(message):
                     if minimum_range >= maximum_range:
                         bot.send_message(cid, text_admin['minium_maximum_range'])
                     else:
+                        markup = send_home()
                         edit_test_minimum_range(minimum_range=minimum_range, id=test_id_dict['id'])
-                        bot.send_message(cid, text_admin['test_minimum_range_success'])
+                        bot.send_message(cid, text_admin['test_minimum_range_success'], reply_markup=markup)
                         test_id_dict.clear()
                         user_steps[cid] = 0
     else:
@@ -1238,8 +1267,9 @@ def edit_test_maximum_range_handler(message):
                     if maximum_range <= minimum_range:
                         bot.send_message(cid, text_admin['maximum_minimum_range'])
                     else:
+                        markup = send_home()
                         edit_test_maximum_range(maximum_range=maximum_range, id=test_id_dict['id'])
-                        bot.send_message(cid, text_admin['test_maximum_range_success'])
+                        bot.send_message(cid, text_admin['test_maximum_range_success'], reply_markup=markup)
                         test_id_dict.clear()
                         user_steps[cid] = 0
     else:
@@ -1252,8 +1282,9 @@ def edit_test_analyze_date_handler(message):
     if cid in admins:
         analyze_date = message.text
         if analyze_date.isnumeric() == True and 1 <= int(analyze_date) <= 90:
+            markup = send_home()
             edit_test_analyze_date(analyze_date=analyze_date, id=test_id_dict['id'])
-            bot.send_message(cid, text_admin['test_analyze_date_success'])
+            bot.send_message(cid, text_admin['test_analyze_date_success'], reply_markup=markup)
             test_id_dict.clear()
             user_steps[cid] = 0
         else:
@@ -1270,8 +1301,9 @@ def edit_test_description_handler(message):
         if len(description) > 255:
             bot.send_message(cid, text_admin['test_description_check'])
         else:
+            markup = send_home()
             edit_test_description(description=description, id=test_id_dict['id'])
-            bot.send_message(cid, text_admin['test_description_success'])
+            bot.send_message(cid, text_admin['test_description_success'], reply_markup=markup)
             test_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1301,11 +1333,11 @@ def breed_handler(message):
 def breed_specifications_handler(message):
     cid = message.chat.id
     if cid in admins:
-        markup = send_home()
         specifications = message.text
         if len(specifications) > 255:
             bot.send_message(cid, text_admin['breed_specifications_check'])
         else:
+            markup = send_home()
             breed.update({'specifications': specifications})
             insert_breed_data(species=breed['species'], name=breed['name'], specifications=breed['specifications'])
             bot.send_message(cid, text_admin['create_breed_success'].format(breed['name']), reply_markup=markup)
@@ -1325,8 +1357,9 @@ def edit_breed_name_handler(message):
         elif len(name) > 45:
             bot.send_message(cid,text_admin['breed_name_check'])
         else:
+            markup = send_home()
             edit_breed_name(name=name, id=breed_id_dict['breed_id'])
-            bot.send_message(cid, text_admin['edit_breed_name'])
+            bot.send_message(cid, text_admin['edit_breed_name'], reply_markup=markup)
             breed_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1341,8 +1374,9 @@ def edit_breed_specifications_handler(message):
         if len(specifications) > 255:
             bot.send_message(cid, text_admin['breed_specifications_check'])
         else:
+            markup = send_home()
             edit_breed_specifications(specifications=specifications, id=breed_id_dict['breed_id'])
-            bot.send_message(cid, text_admin['edit_breed_specifications'])
+            bot.send_message(cid, text_admin['edit_breed_specifications'], reply_markup=markup)
             breed_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1357,9 +1391,10 @@ def reception_answer_date_edit_handler(message):
         if is_valid_date(answer_date) == False:
             bot.send_message(cid, text_admin['reception_answer_date_check'])
         else:
+            markup = send_home()
             answer_date = is_valid_date(answer_date)
             edit_reception_answer_date(answer_date=answer_date, id=reception_id_dict['id'])
-            bot.send_message(cid, text_admin['reception_answer_date_success']) 
+            bot.send_message(cid, text_admin['reception_answer_date_success'], reply_markup=markup) 
             reception_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1369,15 +1404,15 @@ def reception_answer_date_edit_handler(message):
 @bot.message_handler(func=lambda message:get_user_step(message.chat.id)==5) #admin : edit result date
 def result_date_edit_handler(message):
     cid = message.chat.id
-    mid = message.message_id
     if cid in admins:
         result_date = message.text
         if is_valid_datetime(result_date) == False:
             bot.send_message(cid, text_admin['result_date_check'])
         else :
+            markup = send_home()
             result_date = is_valid_datetime(result_date)
             edit_result_date(result_date=result_date, id=result_id_dict['id'])
-            bot.send_message(cid, text_admin['result_date_success'])
+            bot.send_message(cid, text_admin['result_date_success'], reply_markup=markup)
             result_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1397,8 +1432,9 @@ def result_quantity_edit_handler(message):
             if len(str(result_quantity).split('.')[0]) > 5 or len(str(result_quantity).split('.')[-1]) > 3 :
                 bot.send_message(cid, text_admin['result_quantity_check'])
             else:
+                markup = send_home()
                 edit_result_quantity(result_quantity=result_quantity, id=result_id_dict['id'])
-                bot.send_message(cid, text_admin['result_quantity_success'])
+                bot.send_message(cid, text_admin['result_quantity_success'], reply_markup=markup)
                 minimum_range = show_test_type_range(test_id_dict['id'])['minimum_range']
                 maximum_range = show_test_type_range(test_id_dict['id'])['maximum_range']
                 if result_quantity > maximum_range:
@@ -1424,8 +1460,9 @@ def result_conclusion_edit_handler(message):
         if len(conclusion) > 65535:
             bot.send_message(cid, text_admin['result_conclusion_check'])
         else:
+            markup = send_home()
             edit_result_conclusion(conclusion=conclusion, id=result_id_dict['id'])
-            bot.send_message(cid, text_admin['result_conclusion_success'])
+            bot.send_message(cid, text_admin['result_conclusion_success'], reply_markup=markup)
             result_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1456,11 +1493,11 @@ def search_username_handler(message):
 def first_name_edit_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         first_name = message.text
         if len(first_name) > 64:
             bot.send_message(cid, text_user['first_name_check'])
         else:
+            markup = send_home()
             edit_user_first_name(first_name=first_name, cid=cid)
             bot.send_message(cid, text_user['first_name_success'], reply_markup=markup)
             user_steps[cid] = 0
@@ -1472,11 +1509,11 @@ def first_name_edit_handler(message):
 def last_name_edit_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         last_name = message.text
         if len(last_name) > 64:
             bot.send_message(cid, text_user['last_name_check'])
         else:
+            markup = send_home()
             edit_user_last_name(last_name=last_name, cid=cid)
             bot.send_message(cid, text_user['last_name_success'], reply_markup=markup)
             user_steps[cid] = 0
@@ -1488,7 +1525,6 @@ def last_name_edit_handler(message):
 def username_edit_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         username = message.text
         username_rules = True #flag for username check
         for char in username:
@@ -1504,6 +1540,7 @@ def username_edit_handler(message):
             elif len(username) > 32:
                 bot.send_message(cid, text.user['username_check'])
             else:
+                markup = send_home()
                 edit_user_username(username=username, cid=cid)
                 bot.send_message(cid, text_user['username_success'], reply_markup=markup)
                 user_steps[cid] = 0
@@ -1517,11 +1554,11 @@ def username_edit_handler(message):
 def national_code_edit(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         national_code = message.text
         if len(national_code) != 10 or national_code.isnumeric() == False:
             bot.send_message(cid, text_user['national_code_check'])
         else:
+            markup = send_home()
             edit_user_national_code(national_code=national_code, cid=cid)
             bot.send_message(cid, text_user['national_code_success'], reply_markup=markup)
             user_steps[cid] = 0
@@ -1533,14 +1570,14 @@ def national_code_edit(message):
 def phone_edit(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         phone = message.text
         if is_valid_phone(phone):
+            markup = send_home()
             edit_phone(phone=phone, cid=cid)
-            bot.send_message(cid, text_user['phone_success'])
+            bot.send_message(cid, text_user['phone_success'], reply_markup=markup)
             user_steps[cid] = 0
         else :
-            bot.send_message(cid, text_user['phone_check'], reply_markup=markup)
+            bot.send_message(cid, text_user['phone_check'])
     else:
         unknown_message(message)
 
@@ -1549,11 +1586,11 @@ def phone_edit(message):
 def address_edit(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         address = message.text
         if len(address) > 255:
             bot.send_message(cid, text_user['address_check'])
         else:
+            markup = send_home()
             edit_address(address=address, cid=cid)
             bot.send_message(cid, text_user['address_success'], reply_markup=markup)
             user_steps[cid] = 0
@@ -1569,8 +1606,9 @@ def pet_handler(message):
         if len(name) > 45:
             bot.send_message(cid, text_user['pet_name_check'])
         else:
+            markup = send_home()
             insert_pet_data(user_id=cid, breed_id=breed_id_dict['breed_id'], name=name, gender=None, birth_date=None, weight=None, personality=None)
-            bot.send_message(cid, text_user['create_pet_success'].format(name))
+            bot.send_message(cid, text_user['create_pet_success'].format(name), reply_markup=markup)
             breed_id_dict.clear()
             user_steps[cid] = 0
     else:
@@ -1581,11 +1619,11 @@ def pet_handler(message):
 def pet_birth_date_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         birth_date_str = message.text
         if is_valid_date(birth_date_str) == False:
             bot.send_message(cid, text_user['pet_birth_date_check'])
         else:
+            markup = send_home()
             birth_date = is_valid_date(birth_date_str)
             edit_pet_birth_date(birh_date=birth_date, user_id=cid, id=pet_id_dict['id'])
             bot.send_message(cid, text_user['pet_birth_date_success'], reply_markup=markup) 
@@ -1599,7 +1637,6 @@ def pet_birth_date_handler(message):
 def pet_weight_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         weight = message.text
         try:
             weight = float(weight)
@@ -1609,6 +1646,7 @@ def pet_weight_handler(message):
             if len(str(weight).split('.')[0]) > 3 or len(str(weight).split('.')[-1]) > 3:
                 bot.send_message(cid, text_user['pet_weight_check'], reply_markup=markup)
             else:
+                markup = send_home()
                 edit_pet_weight(weight=weight, user_id=cid, id=pet_id_dict['id'])
                 bot.send_message(cid, text_user['pet_weight_success'], reply_markup=markup) 
                 pet_id_dict.clear()  
@@ -1621,11 +1659,11 @@ def pet_weight_handler(message):
 def pet_personality_edit_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = send_home()
         personality = message.text
         if len(personality) > 255:
             bot.send_message(cid, text_user['pet_personality_check'])
         else:
+            markup = send_home()
             edit_pet_personality(personality=personality, user_id=cid, id=pet_id_dict['id'])
             bot.send_message(cid, text_user['pet_personality_success'], reply_markup=markup)
             pet_id_dict.clear()  
@@ -1634,7 +1672,7 @@ def pet_personality_edit_handler(message):
         unknown_message(message)
         
 
-@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==12) #user : create reception with comment and reception_test
+@bot.message_handler(func=lambda message:get_user_step(message.chat.id)==12) #user : create reception with comment and create reception_test
 def reception_comment_handler(message):
     cid = message.chat.id
     if cid not in admins:

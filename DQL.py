@@ -1,7 +1,6 @@
 import mysql.connector
 from config import *
 
-
 def check_test_group_name(name): #check unique test group name..return as true or false
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
@@ -12,7 +11,7 @@ def check_test_group_name(name): #check unique test group name..return as true o
     conn.close()
     return len(result)!=0
 
-def check_test_group_exists(): #check exist test_group..return as true or fales
+def check_test_group_exists(): #check exist test group..return as true or false
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = "SELECT COUNT(*) FROM test_group;"
@@ -155,7 +154,13 @@ def show_test_data(id): #return test data as dictionary
 def show_test(): #return id and paramater and price as list
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT id, parameter, price FROM test;"
+    SQL_Quary = """
+    SELECT test.id, test.parameter, test.price, test_group.name
+    FROM test
+    INNER JOIN test_group
+    ON test.test_group_id=test_group.id
+    ORDER BY test.test_group_id;
+    """
     cursor.execute(SQL_Quary)
     result = cursor.fetchall()
     cursor.close()
@@ -280,45 +285,15 @@ def check_reception_test_analyze_date(reception_id): #return longest day of anal
     if len ([i['analyze_date'] for i in result])!=0:
         return max([i['analyze_date'] for i in result])
     
-def show_reception_comment(id): #retrun reception comment 
+def show_reception_info(id): #retrun reception answer date and comment and receipt and total price
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT comment FROM reception WHERE id=%s;"
+    SQL_Quary = "SELECT answer_date, comment, receipt_image_file_id, total_price FROM reception WHERE id=%s;"
     cursor.execute(SQL_Quary, (id, ))
     result = cursor.fetchall()
     cursor.close()
     conn.close()
-    return result[0]['comment']
-
-def show_reception_answer_date(id): #retrun reception answer_date 
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT answer_date FROM reception WHERE id=%s;"
-    cursor.execute(SQL_Quary, (id, ))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return result[0]['answer_date']
-
-def show_reception_receipt_image_file_id(id): #retrun receipt_image_file_id
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT receipt_image_file_id FROM reception WHERE id=%s;"
-    cursor.execute(SQL_Quary, (id, ))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return result[0]['receipt_image_file_id']
-
-def show_reception_total_price(id): #return total price
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT total_price FROM reception WHERE id=%s;"
-    cursor.execute(SQL_Quary, (id, ))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return result[0]['total_price']
+    return result[0]
 
 def show_reception_user(cid): #retrun reception data and pet name as list
     conn = mysql.connector.connect(**db_config)
@@ -362,7 +337,7 @@ def show_result_data(reception_test_id): #return result item as dictionary
 def show_test_type_range(id): #return type and minimum_range and maximum range as dictionary
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
-    SQL_Quary = "SELECT type, minimum_range, maximum_range FROM test WHERE id=%s"
+    SQL_Quary = "SELECT type, unit, minimum_range, maximum_range FROM test WHERE id=%s"
     cursor.execute(SQL_Quary, (id, ))
     result = cursor.fetchall()
     cursor.close()
@@ -403,7 +378,7 @@ def show_user_pet_data(id): #return pet data and breed data as dictionary
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
     SQL_Quary = """
-    SELECT pet.name as pet_name, breed.name as breed_name, breed.specifications, pet.gender, pet.birth_date, pet.weight, pet.personality
+    SELECT pet.name as pet_name, breed.species, breed.name as breed_name, breed.specifications, pet.gender, pet.birth_date, pet.weight, pet.personality
     FROM pet
     INNER JOIN breed
     ON pet.breed_id=breed.id
