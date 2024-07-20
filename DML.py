@@ -351,6 +351,3 @@ def edit_result_conclusion(conclusion, id):
     cursor.close()
     conn.commit()
     conn.close()
-
-
-

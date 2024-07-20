@@ -85,7 +85,8 @@ create table result(
 	PRIMARY KEY (id),
 	FOREIGN KEY (reception_test_id) REFERENCES reception_test(id),
     	UNIQUE (reception_test_id));
-	
+
+
 
 
 

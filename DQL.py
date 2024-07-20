@@ -402,8 +402,3 @@ def get_cid(username): #get cid with username
         return False
     else:
         return result[0]['cid']
-
-
-
-
-

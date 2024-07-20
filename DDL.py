@@ -169,6 +169,7 @@ def create_result_table():
     cursor.close()
     conn.close()
 
+
 if __name__ == "__main__":
     create_database()
     create_user_table()

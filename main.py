@@ -25,7 +25,7 @@ test_id_dict = dict() #{id : id}
 species_enum = ['cat', 'dog', 'bird', 'rabbit', 'rat', 'other'] #ENUM for species in breed table
 gender_enum = ['male', 'female'] #ENUM for gender in pet table
 quality_enum = ['negative', 'positive'] #ENUM for result quality in result table
-type_enum = ['quantity', 'quality']
+type_enum = ['quantity', 'quality'] #ENUM for show result
 
 def get_member_user(): #return member user
     member_user = show_member_user()
@@ -103,19 +103,6 @@ def reception_receipt_markup(reception_id): #generate markup receptit and return
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text_user['send_receipt'], callback_data=f"send_receipt_{reception_id}"))
     markup.add(InlineKeyboardButton(text['return'], callback_data='return_reception_markup'))
-    return markup
-
-def show_reception_code(cid): #generate markup code for get result
-    markup = InlineKeyboardMarkup()
-    for item in show_reception_user(cid):
-        if item['code'] != None:
-            markup.add(InlineKeyboardButton(item['code'], callback_data=f"result_code_{item['id']}"))
-    return markup
-    
-def show_reception_code_test(reception_id): #generate markup test for get result
-    markup = InlineKeyboardMarkup()
-    for item in show_reception_test(reception_id):
-        markup.add(InlineKeyboardButton(item['parameter'], callback_data=f"result_test_{item['test_id']}_{item['id']}"))
     return markup
 
 def request_markup(): #generate markup reception without code
@@ -693,14 +680,13 @@ def callback_handler(call):
             user_steps[cid] = 13
         elif data.startswith('result_code'): #user : select reception code for show result
             reception_id = int(data.split('_')[-1])
-            markup = show_reception_code_test(reception_id)
-            bot.edit_message_text(text_user['test'], cid, mid)
+            pet_name = data.split('_')[-2]
+            markup = InlineKeyboardMarkup()
+            for item in show_reception_test(reception_id):
+                markup.add(InlineKeyboardButton(item['parameter'], callback_data=f"result_test_{item['test_id']}_{item['id']}"))
+            bot.edit_message_text(text_user['test'].format(pet_name), cid, mid)
             bot.edit_message_reply_markup(cid, mid, reply_markup=markup)
         elif data.startswith('result_test'): #user : select test for show result
-            try:
-                bot.delete_message(cid, mid)
-            except:
-                pass
             reception_test_id = int(data.split('_')[-1])
             test_id = int(data.split('_')[-2])
             test_type = show_test_type_range(test_id)['type']
@@ -764,8 +750,7 @@ def home_command(message):
         markup.add(buttons_admin['create_test'], buttons_admin['create_test_group'])
         markup.add(buttons_admin['edit_test'], buttons_admin['edit_test_group'])
         markup.add(buttons_admin['edit_breed'], buttons_admin['create_breed'])
-        markup.add(buttons_admin['reception_manage'], buttons_admin['request_manage'])
-        markup.add(buttons_admin['username_infomration'])
+        markup.add(buttons_admin['username_infomration'], buttons_admin['reception_manage'], buttons_admin['request_manage'])
         bot.send_message(cid, text['home'], reply_markup=markup)
         user_steps[cid] = 0
     else:
@@ -881,7 +866,10 @@ def reception_manage_user_handler(message):
 def recieve_result_handler(message):
     cid = message.chat.id
     if cid not in admins:
-        markup = show_reception_code(cid)
+        markup = InlineKeyboardMarkup()
+        for item in show_reception_user(cid):
+            if item['code'] != None:
+                markup.add(InlineKeyboardButton(item['code'], callback_data=f"result_code_{item['name']}_{item['id']}"))
         bot.send_message(cid, text_user['reception_code'], reply_markup=markup)
     else:
         unknown_message(message)
