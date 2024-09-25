@@ -1,3 +1,4 @@
 pet_lab/
 __pycache__/
 config.py
+*.pdf
